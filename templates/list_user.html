@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+    <body>
+        <h2 style = "text-align: center;">List of User</h2>
+        <table border = 1>
+            <thead>
+                <td>ID</td>
+                <td>NAME</td>
+                <td>ROLE</td>
+            </thead>
+            {% for row in rows %}
+                <tr>
+                    <td>{{row[0]}}</td>
+                    <td>{{row[1]}}</td>
+                    <td>
+                        <form>
+                            <input type="text" id={{ row[0] }} name="role" value={{ row[2] }}>
+                            <input type="submit" value="Save">
+                        </form>
+                        <!-- <form>
+                            <select name="role">
+                                <option value="admin">admin</option>
+                                <option value="labeller">labeller</option>
+                                <option value="editor">editor</option>
+                            </select>
+                        </form> -->
+                        <!-- <form>
+                            <fieldset>
+                                <div>
+                                    {{ form.role }}
+                                </div>
+                            </fieldset>
+                        </form> -->
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
