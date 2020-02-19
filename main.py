@@ -1,44 +1,92 @@
-from flask import Flask
 from flask import Flask, flash, redirect, render_template, request, abort, url_for
+import flask_login
 import os
 from sqlite3 import Error
 import sqlite3 as sql
 
 app = Flask(__name__)
+app.secret_key = 'secretlogin' 
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+
+class User(flask_login.UserMixin):
+    pass
+
+@login_manager.user_loader
+def user_loader(username):
+    try:
+        conn = sql.connect("users.db")
+        result = False
+
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM USER")
+        rows = cur.fetchall()
+        for row in rows:
+            if username == row[1]:
+                result = True
+
+        cur.close()
+
+    except Error as e:
+        print(e)
+    finally:
+        if conn:
+            conn.close()
+
+    if result == False:
+        return
+
+    user = User()
+    user.id = username
+    return user
 
 
-@app.route('/home/<user>')
-def user_role(user):
-    if user == 'admin':
-        return redirect(url_for('admin'))
-    elif user == 'labeller':
-        return redirect(url_for('labeller'))
+@login_manager.request_loader
+def request_loader(request):
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    # Check user on database
+    try:
+        conn = sql.connect("users.db")
+        result = False
+
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM USER")
+        rows = cur.fetchall()
+        for row in rows:
+            db_user = row[1]
+            db_pass = row[3]
+            if db_user == username and db_pass == password:
+                result = True
+
+        cur.close()
+
+    except Error as e:
+        print(e)
+    finally:
+        if conn:
+            conn.close()
+
+    if result == False:
+        return
     else:
-        return redirect(url_for('editor'))
+        user = User()
+        user.id = username
+        user.is_authenticated = True
 
-@app.route('/home/admin')
-def admin():
-    return "You are in admin site"
-
-@app.route('/home/labeller')
-def labeller():
-    return "You are in labeller site"
-
-@app.route('/home/editor')
-def editor():
-    return "You are in editor site"
-
+    return user
 
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
     # error message
     msg = ''
-    # Check if "username" and "password" POST requests exist (user submitted form)
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+    if request.method == 'GET':
+        return render_template('login.html', msg=msg)
+
+    else:
         username = request.form['username']
         password = request.form['password']
-
-        # Check user on database
         try:
             conn = sql.connect("users.db")
             result = False
@@ -60,17 +108,15 @@ def login():
         finally:
             if conn:
                 conn.close()
-
-        if result:
-            # Redirect to home page
+        if result == True:
+            user = User()
+            user.id = username
+            flask_login.login_user(user)
             return user_role(db_role)
-
         else:
-            # jika akun tidak ada
             msg = 'Incorrect username/password!'
-            
-    # menampilkan error message jika ada
-    return render_template('login.html', msg=msg)
+            return render_template('login.html', msg=msg)
+
 
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
@@ -92,6 +138,8 @@ def register():
             print("Total", cur.rowcount, "Records inserted successfully into USER table")
             conn.commit()
             cur.close()
+
+            flash("Successfully registered")
             
         except Error as e:
             print(e)
@@ -104,5 +152,42 @@ def register():
 
     return render_template('register.html', msg=msg)
 
+@app.route('/home/<user>')
+@flask_login.login_required
+def user_role(user):
+    if user == 'admin':
+        return redirect(url_for('admin'))
+    elif user == 'labeller':
+        return redirect(url_for('labeller'))
+    else:
+        return redirect(url_for('editor'))
+
+@app.route('/home/admin')
+@flask_login.login_required
+def admin():
+    msg = "You are in admin site"
+    return render_template('home.html', msg=msg)
+
+@app.route('/home/labeller')
+@flask_login.login_required
+def labeller():
+    msg =  "You are in labeller site"
+    return render_template('home.html', msg=msg)
+
+@app.route('/home/editor')
+@flask_login.login_required
+def editor():
+    msg =  "You are in editor site"
+    return render_template('home.html', msg=msg)
+
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return 'Unauthorized'
+
+@app.route("/logout")
+def logout():
+    flask_login.logout_user()
+    return login()
+
 if __name__ == '__main__':
-   app.run(debug = True)
+    app.run(debug = True)
