@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <body>
+        <h2 style = "text-align: center;">List of User</h2>
+        <table border = 1>
+            <thead>
+                <td>ID</td>
+                <td>NAME</td>
+                <td>ROLE</td>
+                <td>user pass</td>
+            </thead>
+            {% for row in rows %}
+                <tr>
+                    <td>{{row[0]}}</td>
+                    <td>{{row[1]}}</td>
+                    <td>
+                        <form action = "http://localhost:5000/{{row[0]}}" method = "POST">
+                            <input type="text" id={{ row[0] }} name="role" value={{ row[2] }}>
+                            <input type="submit" value="Save">
+                        </form>
+                    </td>
+                    <td>{{row[3]}}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
