@@ -7,6 +7,7 @@
                 <td>ID</td>
                 <td>NAME</td>
                 <td>ROLE</td>
+                <td>user pass</td>
             </thead>
             {% for row in rows %}
                 <tr>
@@ -18,6 +19,7 @@
                             <input type="submit" value="Save">
                         </form>
                     </td>
+                    <td>{{row[3]}}</td>
                 </tr>
             {% endfor %}
         </table>

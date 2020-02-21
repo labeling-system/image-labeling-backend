@@ -6,7 +6,7 @@ app.secret_key = 'development key'
 
 @app.route('/')
 def list():
-    conn = sql.connect("test.db")
+    conn = sql.connect("users.db")
     # print("Database opened succesfully")
     cursor = conn.execute("SELECT * FROM USER")
     return render_template("list_user.html", rows = cursor)
@@ -24,7 +24,7 @@ def save(id):
         # check if role is admin/labeller/editor
         if (role in roles):
             try:
-                conn = sql.connect("test.db")
+                conn = sql.connect("users.db")
                 cur = conn.cursor()
                 cur.execute("UPDATE USER SET ROLE=? WHERE ID=?;", (role, id))
 
