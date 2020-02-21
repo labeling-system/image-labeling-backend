@@ -5,7 +5,9 @@ from sqlite3 import Error
 import sqlite3 as sql
 
 app = Flask(__name__)
-app.secret_key = 'secretlogin' 
+app.config.from_pyfile('config/config.cfg')
+app.secret_key = app.config['SECRET_KEY']
+
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
@@ -15,7 +17,7 @@ class User(flask_login.UserMixin):
 @login_manager.user_loader
 def user_loader(username):
     try:
-        conn = sql.connect("users.db")
+        conn = sql.connect(app.config['DATABASE_NAME'])
         result = False
 
         cur = conn.cursor()
@@ -48,7 +50,7 @@ def request_loader(request):
 
     # Check user on database
     try:
-        conn = sql.connect("users.db")
+        conn = sql.connect(app.config['DATABASE_NAME'])
         result = False
 
         cur = conn.cursor()
@@ -88,7 +90,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         try:
-            conn = sql.connect("users.db")
+            conn = sql.connect(app.config['DATABASE_NAME'])
             result = False
 
             cur = conn.cursor()
@@ -130,7 +132,7 @@ def register():
         role = request.form['role']
 
         try:
-            conn = sql.connect("users.db")
+            conn = sql.connect(app.config['DATABASE_NAME'])
 
             cur = conn.cursor()
             cur.execute("INSERT INTO USER (NAME, ROLE, PASSWORD) VALUES (?, ?, ?);", (username, role, password))
