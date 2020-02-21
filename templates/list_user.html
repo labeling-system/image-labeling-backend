@@ -1,7 +1,7 @@
-<!doctype html>
-<html>
-    <body>
-        <h2 style = "text-align: center;">List of User</h2>
+{% extends 'home.html' %}
+
+{% block content %}
+    <h2 style = "text-align: center;">List of User</h2>
         <table border = 1>
             <thead>
                 <td>ID</td>
@@ -23,5 +23,4 @@
                 </tr>
             {% endfor %}
         </table>
-    </body>
-</html>
+{% endblock %}
