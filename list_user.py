@@ -14,11 +14,11 @@ def list():
 @app.route('/list/<user>')
 def user_role(user):
     if user == 'admin':
-        return redirect(url_for('admin'))
+        return redirect(url_for('user_bp.admin'))
     elif user == 'labeller':
-        return redirect(url_for('labeller'))
+        return redirect(url_for('user_bp.labeller'))
     else:
-        return redirect(url_for('editor'))
+        return redirect(url_for('user_bp.editor'))
 
 @app.route('/list/admin')
 def admin():
