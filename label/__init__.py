@@ -9,7 +9,9 @@ def create_app():
 
     with app.app_context():
         from .models import user
-        
         app.register_blueprint(user.user_bp)
+
+        from .models import image
+        app.register_blueprint(image.image_bp)
 
         return app

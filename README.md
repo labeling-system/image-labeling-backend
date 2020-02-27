@@ -19,3 +19,14 @@ python main.py
 
 ## API Endpoints
 List of available endpoints
+
+#### GET /image/{id}
+Fetch image from given id. 
+
+**Response**
+```
+{
+  "filename": "wakgeng.jpg",
+  "status": "labeled"
+}
+```
