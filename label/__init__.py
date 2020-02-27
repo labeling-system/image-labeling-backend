@@ -1,10 +1,11 @@
 import os
 from flask import Flask
+# from database import db
+import config
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_pyfile('../config/config.cfg')
-    app.secret_key = app.config['SECRET_KEY']
+    app.secret_key = config.SECRET_KEY
 
     with app.app_context():
         from .models import user

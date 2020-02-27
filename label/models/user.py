@@ -2,7 +2,8 @@ from flask import Blueprint, flash, redirect, render_template, request, abort, u
 from flask import current_app as app
 import flask_login
 from sqlite3 import Error
-import sqlite3 as sql
+import config
+from label.database import db
 
 user_bp = Blueprint('user_bp', __name__,
                     template_folder='templates',
@@ -17,10 +18,9 @@ class User(flask_login.UserMixin):
 @login_manager.user_loader
 def user_loader(username):
     try:
-        conn = sql.connect(app.config['DATABASE_NAME'])
         result = False
 
-        cur = conn.cursor()
+        cur = db.conn.cursor()
         cur.execute("SELECT * FROM USER")
         rows = cur.fetchall()
         for row in rows:
@@ -31,9 +31,6 @@ def user_loader(username):
 
     except Error as e:
         print(e)
-    finally:
-        if conn:
-            conn.close()
 
     if result == False:
         return
@@ -50,10 +47,9 @@ def request_loader(request):
 
     # Check user on database
     try:
-        conn = sql.connect(app.config['DATABASE_NAME'])
         result = False
 
-        cur = conn.cursor()
+        cur = db.conn.cursor()
         cur.execute("SELECT * FROM USER")
         rows = cur.fetchall()
         for row in rows:
@@ -66,14 +62,11 @@ def request_loader(request):
 
     except Error as e:
         print(e)
-    finally:
-        if conn:
-            conn.close()
 
+    user = User()
     if result == False:
         return
     else:
-        user = User()
         user.id = username
         user.is_authenticated = True
 
@@ -90,10 +83,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
         try:
-            conn = sql.connect(app.config['DATABASE_NAME'])
             result = False
 
-            cur = conn.cursor()
+            cur = db.conn.cursor()
             cur.execute("SELECT * FROM USER")
             rows = cur.fetchall()
             for row in rows:
@@ -107,9 +99,7 @@ def login():
 
         except Error as e:
             print(e)
-        finally:
-            if conn:
-                conn.close()
+
         if result == True:
             user = User()
             user.id = username
@@ -131,9 +121,7 @@ def register():
         role = request.form['role']
 
         try:
-            conn = sql.connect(app.config['DATABASE_NAME'])
-
-            cur = conn.cursor()
+            cur = db.conn.cursor()
             cur.execute("INSERT INTO USER (NAME, ROLE, PASSWORD) VALUES (?, ?, ?);", (username, role, password))
             # call commit on the connection...
             print("Total", cur.rowcount, "Records inserted successfully into USER table")
@@ -144,9 +132,6 @@ def register():
             
         except Error as e:
             print(e)
-        finally:
-            if conn:
-                conn.close()
 
     elif request.method == 'POST':
         msg = 'Please fill out the form!'
