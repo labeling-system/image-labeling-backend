@@ -1,2 +1,2 @@
 SECRET_KEY='secretlogin'
-DATABASE_NAME='users.db'
+DATABASE_NAME='label.db'

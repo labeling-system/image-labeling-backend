@@ -2,7 +2,6 @@ from flask import Blueprint, flash, redirect, render_template, request, abort, u
 from flask import current_app as app
 import flask_login
 from sqlite3 import Error
-import config
 from label.database import db
 
 user_bp = Blueprint('user_bp', __name__,
@@ -21,7 +20,7 @@ def user_loader(username):
         result = False
 
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM USER")
+        cur.execute("SELECT * FROM users")
         rows = cur.fetchall()
         for row in rows:
             if username == row[1]:
@@ -50,7 +49,7 @@ def request_loader(request):
         result = False
 
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM USER")
+        cur.execute("SELECT * FROM users")
         rows = cur.fetchall()
         for row in rows:
             db_user = row[1]
@@ -86,7 +85,7 @@ def login():
             result = False
 
             cur = db.conn.cursor()
-            cur.execute("SELECT * FROM USER")
+            cur.execute("SELECT * FROM users")
             rows = cur.fetchall()
             for row in rows:
                 db_user = row[1]
@@ -122,9 +121,9 @@ def register():
 
         try:
             cur = db.conn.cursor()
-            cur.execute("INSERT INTO USER (NAME, ROLE, PASSWORD) VALUES (?, ?, ?);", (username, role, password))
+            cur.execute("INSERT INTO users (name, role, password) VALUES (?, ?, ?);", (username, role, password))
             # call commit on the connection...
-            print("Total", cur.rowcount, "Records inserted successfully into USER table")
+            print("Total", cur.rowcount, "Records inserted successfully into user table")
             conn.commit()
             cur.close()
 
