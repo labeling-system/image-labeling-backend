@@ -26,7 +26,21 @@ Fetch image from given id.
 **Response**
 ```
 {
-  "filename": "wakgeng.jpg",
-  "status": "labeled"
+    "filename": "tes.jpg",
+    "status": "labeled"
+}
+```
+
+#### POST /image
+Save image to database as unlabeled from given filename.
+
+**Request**
+```
+{
+    "filenames": [
+      "tes.jpg",
+      "tes2.jpg",
+      "tes3.png",
+    ]
 }
 ```

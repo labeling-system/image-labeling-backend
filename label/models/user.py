@@ -124,7 +124,7 @@ def register():
             cur.execute("INSERT INTO users (name, role, password) VALUES (?, ?, ?);", (username, role, password))
             # call commit on the connection...
             print("Total", cur.rowcount, "Records inserted successfully into user table")
-            conn.commit()
+            db.conn.commit()
             cur.close()
 
             flash("Successfully registered")
