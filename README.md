@@ -11,7 +11,7 @@ git clone https://gitlab.informatika.org/if3250-2020-label-2/label-2-backend.git
 ````
 ### Run on local server
 ```
-python main.py
+make
 ```
 ### Access
 * host: `127.0.0.1`
