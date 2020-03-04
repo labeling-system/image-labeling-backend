@@ -11,7 +11,7 @@ ID = 0
 STATUS = 1
 FILENAME = 2
 
-# Fetch image from given id
+# Fetch an image from given id
 @image_bp.route('/image/<id>', methods=['GET'])
 def get_image(id):
     try:
@@ -43,3 +43,19 @@ def post_image():
         return jsonify({"error": "can't fetch image"}), 500
 
     return Response(status=200)
+
+# Fetch all image
+@image_bp.route('/image/all', methods=['GET'])
+def get_all_image():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM images")
+        rows = cur.fetchall()
+        cur.close()
+
+    except Error as e:
+        return jsonify({"error": "can't fetch image"}), 500
+    
+    return jsonify({
+        "images": rows
+    }), 200
