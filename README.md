@@ -31,6 +31,27 @@ Fetch image from given id.
 }
 ```
 
+#### GET /image/all
+Fetch all images.
+
+**Response**
+```
+{
+  "images": [
+    [
+      45,
+      "unlabeled",
+      "beautiful-water-drop-on-dandelion-260nw-789676552.jpg"
+    ],
+    [
+      46,
+      "unlabeled",
+      "GeFvQkBbSLaMdpKXF1Zv_bigstock-Aerial-View-Of-Blue-Lakes-And--227291596.jpg"
+    ],
+  ]
+}
+```
+
 #### POST /image
 Save image to database as unlabeled from given filename.
 
