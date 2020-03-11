@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, abort, url_for
+from flask import Blueprint, flash, redirect, render_template, request, abort, url_for, jsonify, Response
 from flask import current_app as app
 import flask_login
 from sqlite3 import Error
@@ -173,3 +173,35 @@ def unauthorized_handler():
 def logout():
     flask_login.logout_user()
     return login()
+
+@user_bp.route("/userrole", methods=['GET'])
+def get_all_users():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM users")
+        rows = cur.fetchall()
+        cur.close()
+
+    except Error as e:
+        return jsonify({"error": "can't fetch user's data"}), 500
+    
+    return jsonify({
+        "users": rows
+    }), 200
+
+#update user's role
+@user_bp.route("/userrole", methods=['POST'])
+def update_user():
+    req = request.get_json()
+    print(req['id'])
+    print(req['role'])
+
+    try:
+        cur = db.conn.cursor()
+        cur.execute("UPDATE users SET role='" + req['role'] + "' WHERE id_user='" + str(req['id']) + "'")
+        db.conn.commit()
+        cur.close()
+    except Error as e:
+        return jsonify({"error": "can't update user"}), 500
+    
+    return Response(status=200)
