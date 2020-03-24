@@ -6,23 +6,23 @@ from label.utils import const
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
-is_initiated = false
+is_initiated = False
 #working image handling
 @selection_bp.route('/selection/working', methods=['GET', 'POST'])
-def working_image(image_id=1):
+def working_image(is_initiated, image_id=1):
     if is_initiated:
         pass
     else:
         try:
             image_id, filename = get_working_image()
-            is_initiated = true
+            is_initiated = True
         except Error as e:
             return jsonify({"error": "can't get image from database"}), 500
 
     update_image_status(const.EDITING, image_id)
     
     return jsonify({
-        "image_id": image_id
+        "image_id": image_id,
         "filename": filename
     }), 200
 
@@ -43,7 +43,7 @@ def get_working_image():
 def get_selection_properties(image_id):
     length = "60px"
     width = "30px"
-    x = 2
+    x = 2 
     y = 4
     label = "human"
     return length, width, x, y, label
@@ -69,7 +69,7 @@ def save_image(image_id):
     update_image_status(const.EDITING, image_id)
 
     return jsonify({
-        "image_id": image_id
+        "image_id": image_id,
         "filename": filename
     }), 200
 
