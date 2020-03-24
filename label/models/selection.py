@@ -6,7 +6,7 @@ from label.utils import const
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
-is_initiated = false
+is_initiated = False
 #working image handling
 @selection_bp.route('/selection/working', methods=['GET', 'POST'])
 def working_image(image_id=1):
@@ -22,7 +22,7 @@ def working_image(image_id=1):
     update_image_status(const.EDITING, image_id)
     
     return jsonify({
-        "image_id": image_id
+        "image_id": image_id,
         "filename": filename
     }), 200
 
@@ -69,7 +69,7 @@ def save_image(image_id):
     update_image_status(const.EDITING, image_id)
 
     return jsonify({
-        "image_id": image_id
+        "image_id": image_id,
         "filename": filename
     }), 200
 
