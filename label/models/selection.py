@@ -6,10 +6,10 @@ from label.utils import const
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
-
-# Fetch an image from given id
+is_initiated = false
+#working image handling
 @selection_bp.route('/selection/working', methods=['GET', 'POST'])
-def working_image(is_initiated=false, image_id=1):
+def working_image(image_id=1):
     if is_initiated:
         pass
     else:
