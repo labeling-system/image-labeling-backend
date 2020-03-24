@@ -14,4 +14,7 @@ def create_app():
         from .models import image
         app.register_blueprint(image.image_bp)
 
+        from .models import selection
+        app.register_blueprint(selection.selection_bp)
+
         return app
