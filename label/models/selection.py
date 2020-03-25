@@ -7,6 +7,7 @@ selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
 is_initiated = False
+a = 1
 #working image handling
 @selection_bp.route('/selection/working', methods=['GET', 'POST'])
 def working_image(is_initiated, image_id=1):
