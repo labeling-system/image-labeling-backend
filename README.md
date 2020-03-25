@@ -31,23 +31,36 @@ Fetch image from given id.
 }
 ```
 
-#### GET /image/all
-Fetch all images.
+#### GET /image/all/{page}
+Fetch 25 images, from given page.
 
 **Response**
 ```
 {
+  "count": [
+    54
+  ],
   "images": [
     [
-      45,
+      51,
       "unlabeled",
-      "beautiful-water-drop-on-dandelion-260nw-789676552.jpg"
+      "tes.png"
     ],
     [
-      46,
+      52,
       "unlabeled",
-      "GeFvQkBbSLaMdpKXF1Zv_bigstock-Aerial-View-Of-Blue-Lakes-And--227291596.jpg"
+      "tes2.png"
     ],
+    [
+      53,
+      "unlabeled",
+      "tes3.png"
+    ],
+    [
+      54,
+      "labeled",
+      "tes4.png"
+    ]
   ]
 }
 ```

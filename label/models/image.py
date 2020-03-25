@@ -10,6 +10,7 @@ image_bp = Blueprint('image_bp', __name__,
 ID = 0
 STATUS = 1
 FILENAME = 2
+COUNT_PAGE = 25
 
 # Fetch an image from given id
 @image_bp.route('/image/<id>', methods=['GET'])
@@ -45,17 +46,21 @@ def post_image():
     return Response(status=200)
 
 # Fetch all image
-@image_bp.route('/image/all', methods=['GET'])
-def get_all_image():
+@image_bp.route('/image/all/<page>', methods=['GET'])
+def get_all_image(page):
+    offset = (int(page) - 1) * COUNT_PAGE
     try:
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM images")
+        cur.execute("SELECT * FROM images LIMIT ? OFFSET ?", (COUNT_PAGE, offset))
         rows = cur.fetchall()
+        cur.execute("SELECT COUNT(*) FROM images")
+        count = cur.fetchone()
         cur.close()
 
     except Error as e:
         return jsonify({"error": "can't fetch image"}), 500
     
     return jsonify({
-        "images": rows
+        "images": rows,
+        "count": count
     }), 200
