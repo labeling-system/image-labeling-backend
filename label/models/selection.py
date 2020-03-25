@@ -83,6 +83,19 @@ def update_image_status(status, id_image):
         return Response(status=200)
     except Error as e:
         return jsonify({"error": "can't fetch image"}), 500
+
+# Fetch all labeled image    
+@selection_bp.route("/others", methods=['GET'])
+def get_all_labeled():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM images JOIN selections USING(id_image) WHERE images.status = 'labeled'")
+        rows = cur.fetchall()
+        cur.close()
+
+    except Error as e:
+        return jsonify({"error": "can't fetch user's data"}), 500
     
-
-
+    return jsonify({
+        "labeled": rows
+    }), 200
