@@ -52,14 +52,16 @@ def delete_all_image():
     }), 200
 
 # Ping image id
-@image_bp.route('/image/ping/<id>', methods=['PUT'])
+@image_bp.route('/image/ping/<id>', methods=['POST'])
 def ping_image(id):
     try:
         cur = db.conn.cursor()
         cur.execute("UPDATE images SET last_update=:time WHERE id_image=:id", {"time": time.time(), "id": id})
+        db.conn.commit()
         cur.close()
 
     except Error as e:
+        print(e)
         return jsonify({"error": "can't update last_update in ping image"}), 500
 
     return jsonify({
@@ -101,6 +103,22 @@ def post_image():
         db.conn.commit()
         cur.close()
     except Error as e:
+        return jsonify({"error": "can't post image"}), 500
+
+    return Response(status=200)
+
+# For debugging, delete this when unused
+@image_bp.route('/image/update', methods=['POST'])
+def update_inactive_editing():
+    print("update")
+    try:
+        cur = db.conn.cursor()
+        cur.execute("UPDATE images SET status=:new_status WHERE status=:old_status", {"new_status": const.UNLABELED, "old_status": const.EDITING})
+        db.conn.commit()
+        cur.close()
+
+    except Error as e:
+        print(e)
         return jsonify({"error": "can't post image"}), 500
 
     return Response(status=200)
