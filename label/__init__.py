@@ -17,4 +17,7 @@ def create_app():
         from .models import selection
         app.register_blueprint(selection.selection_bp)
 
+        from .models import label
+        app.register_blueprint(label.label_bp)
+        
         return app
