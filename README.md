@@ -78,3 +78,13 @@ Save image to database as unlabeled from given filename.
     ]
 }
 ```
+
+#### DELETE /image/all
+Delete all image and return total images deleted.
+
+**Response**
+```
+{
+    "count": 54
+}
+```

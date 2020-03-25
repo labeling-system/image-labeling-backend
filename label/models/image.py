@@ -64,3 +64,19 @@ def get_all_image(page):
         "images": rows,
         "count": count
     }), 200
+
+# Delete all image
+@image_bp.route('/image/all', methods=['DELETE'])
+def delete_all_image():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("DELETE FROM images")
+        count = cur.rowcount
+        cur.close()
+
+    except Error as e:
+        return jsonify({"error": "can't fetch image"}), 500
+    
+    return jsonify({
+        "count": count
+    }), 200
