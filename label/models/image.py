@@ -118,7 +118,15 @@ def update_inactive_editing():
         cur.close()
 
     except Error as e:
+<<<<<<< HEAD
+        return jsonify({"error": "can't fetch image"}), 500
+    
+    return jsonify({
+        "images": rows
+    }), 200
+=======
         print(e)
         return jsonify({"error": "can't post image"}), 500
 
     return Response(status=200)
+>>>>>>> b72da701b152610fc20ffa355a70d912402b8c32
