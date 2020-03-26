@@ -11,22 +11,56 @@ selection_bp = Blueprint('selection_bp', __name__,
 is_initiated = False
 a = 1
 #working image handling
-@selection_bp.route('/selection/working', methods=['GET', 'POST'])
-def working_image(is_initiated, image_id=1):
-    if is_initiated:
-        pass
-    else:
-        try:
-            image_id, filename = get_working_image()
-            is_initiated = True
-        except Error as e:
-            return jsonify({"error": "can't get image from database"}), 500
+@selection_bp.route('/selection/initiate', methods=['GET', 'POST'])
+def initiate_image():
+    try:
+        image_id, filename = get_working_image()
+    except Error as e:
+        return jsonify({"error": "can't get image from database"}), 500
 
     update_image_status(const.EDITING, image_id)
     
     return jsonify({
         "image_id": image_id,
         "filename": filename
+    }), 200
+
+@selection_bp.route('/selection', methods=['GET', 'POST'])
+def working_image():
+    try:
+        image_id, filename = get_working_image()
+    except Error as e:
+        return jsonify({"error": "can't get image from database"}), 500
+
+    update_image_status(const.EDITING, image_id)
+    
+    return jsonify({
+        "image_id": image_id,
+        "filename": filename
+    }), 200
+
+# Fetch an image from given id, buat rika
+# akan menerima id, return nama file, status, last_update
+@selection_bp.route('/selection/<id>', methods=['GET', 'POST'])
+def get_working_image_from_id(id):
+    try:
+        cur = db.conn.cursor()
+        print(id)
+        cur.execute("SELECT * FROM images WHERE id_image=:id", {"id": id})
+        row = cur.fetchone()
+        cur.close()
+
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't fetch one image"}), 500
+    
+    if row == None:
+        return jsonify({"error": "id for image not found"}), 404
+
+    return jsonify({
+        "filename": row[FILENAME],
+        "status": row[STATUS],
+        "last_update": row[LAST_UPDATE]
     }), 200
 
 def get_working_image():
@@ -80,7 +114,7 @@ def save_image(image_id):
 def update_image_status(status, id_image):
     try:
         cur = db.conn.cursor()
-        cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, image_id))
+        cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, id_image))
         db.conn.commit()
         cur.close()
         return Response(status=200)
