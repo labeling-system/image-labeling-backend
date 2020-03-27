@@ -9,7 +9,9 @@ selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
 is_initiated = False
-a = 1
+ID = 0
+STATUS = 1
+FILENAME = 2
 #working image handling
 @selection_bp.route('/selection/initiate', methods=['GET', 'POST'])
 def initiate_image():
@@ -28,9 +30,12 @@ def initiate_image():
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
     try:
+        print("a")
         image_id, filename = get_working_image()
     except Error as e:
-        return jsonify({"error": "can't get image from database"}), 500
+        print("b")
+        print(e)
+        return jsonify({"error": "can't get image from database"})
 
     update_image_status(const.EDITING, image_id)
     
@@ -38,6 +43,24 @@ def working_image():
         "image_id": image_id,
         "filename": filename
     }), 200
+
+def get_working_image():
+    # try:
+
+        print("c")
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM images WHERE status=?", [const.UNLABELED])
+        row = cur.fetchone()
+        cur.close()
+        image_id = row[ID]
+        filename = row[FILENAME]
+        print("abc", image_id, filename)
+        return (image_id, filename)
+
+    # except Error as e:
+    #     print(e)
+    #     return jsonify({"error": "can't get image from database"})
+
 
 # Fetch an image from given id, buat rika
 # akan menerima id, return nama file, status, last_update
@@ -63,18 +86,6 @@ def get_working_image_from_id(id):
         "last_update": row[LAST_UPDATE]
     }), 200
 
-def get_working_image():
-    try:
-        cur = db.conn.cursor()
-        cur.execute("SELECT * FROM images WHERE status=?", const.UNLABELED)
-        row = cur.fetchone()
-        cur.close()
-        image_id = row[ID_IMAGE]
-        filename = row[FILENAME]
-        return (image_id, filename), 200
-
-    except Error as e:
-        return jsonify({"error": "can't get image from database"}), 500
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
 def get_selection_properties(image_id):
