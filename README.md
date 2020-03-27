@@ -66,15 +66,16 @@ Fetch 25 images, from given page.
 ```
 
 #### POST /image
-Save image to database as unlabeled from given filename.
+Save image to database as unlabeled from given files. Files is array of 
+filename, width, and height in pixel.
 
 **Request**
 ```
 {
-    "filenames": [
-      "tes.jpg",
-      "tes2.jpg",
-      "tes3.png",
+    "files": [
+      ["tes.jpg", 1, 2],
+      ["tes2.jpg", 2, 3],
+      ["tes3.jpg", 1, 4]
     ]
 }
 ```
