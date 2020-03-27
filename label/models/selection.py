@@ -9,7 +9,7 @@ selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
 is_initiated = False
-ID = 0
+ID_IMAGE = 0
 STATUS = 1
 FILENAME = 2
 #working image handling
@@ -52,7 +52,7 @@ def get_working_image():
         cur.execute("SELECT * FROM images WHERE status=?", [const.UNLABELED])
         row = cur.fetchone()
         cur.close()
-        image_id = row[ID]
+        image_id = row[ID_IMAGE]
         filename = row[FILENAME]
         print("abc", image_id, filename)
         return (image_id, filename)
