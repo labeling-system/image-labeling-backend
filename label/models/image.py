@@ -13,6 +13,10 @@ STATUS = 1
 FILENAME = 2
 LAST_UPDATE = 3
 
+REQ_FILENAME = 0
+REQ_WIDTH = 1
+REQ_HEIGHT = 2
+
 COUNT_PAGE = 25
 
 # Fetch all image
@@ -98,11 +102,18 @@ def post_image():
     
     try:
         cur = db.conn.cursor()
-        for filename in req['filenames']:
-            cur.execute("INSERT INTO images (status, filename) VALUES (?, ?);", (const.UNLABELED, filename))
+        for file in req['files']:
+            cur.execute("INSERT INTO images (status, filename, width, height) VALUES (:status, :filename, :width, :height);", 
+                {
+                    "status": const.UNLABELED, 
+                    "filename": file[REQ_FILENAME],
+                    "width": file[REQ_WIDTH],
+                    "height": file[REQ_HEIGHT]
+                })
         db.conn.commit()
         cur.close()
     except Error as e:
+        print(e)
         return jsonify({"error": "can't post image"}), 500
 
     return Response(status=200)
