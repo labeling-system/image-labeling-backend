@@ -100,6 +100,7 @@ def get_selection_properties(image_id):
 
 @selection_bp.route('/selection/next', methods=['GET', 'POST'])
 def save_image(image_id):
+    #req = request.get_json()
     length, width, x, y, label = get_selection_properties(image_id)
 
     try:
