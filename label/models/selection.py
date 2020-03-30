@@ -1,9 +1,12 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request, Response, make_response, send_file
 from sqlite3 import Error
 from label.database import db
 from label.utils import const
 from xml.etree import ElementTree
 from xml.dom.minidom import parseString
+from zipfile import ZipFile
+import os
+import http.client
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
@@ -134,7 +137,6 @@ def update_image_status(status, id_image):
         return jsonify({"error": "can't fetch image"}), 500
 
 # Fetch all labeled image    
-@selection_bp.route("/others", methods=['GET'])
 def get_all_labeled():
     try:
         cur = db.conn.cursor()
@@ -143,82 +145,82 @@ def get_all_labeled():
         cur.close()
 
     except Error as e:
-        return jsonify({"error": "can't fetch user's data"}), 500
+        print(e)
     
-    return jsonify({
-        "labeled": rows
-    }), 200
+    return rows
 
-def genXML(filename):
-    images = {
-        'image1' : {
-            'name' : 'A',
-            'xmin' : 10,
-            'ymin' : 10,
-            'size' : 20
-        },
-        'image2' : {
-            'name' : 'B',
-            'xmin' : 15,
-            'ymin' : 15,
-            'size' : 20
-        }
-    }
+def zipping(directory):
+    with ZipFile(directory + '.zip', 'w') as zipObj:
+        # Iterate over all the files in directory
+        for folderName, subfolders, filenames in os.walk(directory):
+            for filename in filenames:
+                #create complete filepath of file in directory
+                filePath = os.path.join(folderName, filename)
+                # Add file to zip
+                zipObj.write(filePath)
 
-    for x, y in images.items():
-        print(y['name'])
+@selection_bp.route("/download", methods=['GET'])
+def generateXML():
+    try:
+        data = get_all_labeled()
+        print(data)
 
-    tree = ElementTree.ElementTree() 
-    node_root = ElementTree.Element('annotation')
+        for d in data:
+            print(d[2].split('.'))
+            filename = d[2].split('.')[0]
+            print(filename)
+            tree = ElementTree.ElementTree()
+            node_root = ElementTree.Element('annotation')
+            node_folder = ElementTree.Element('folder')
+            node_folder.text = 'upload'
+            node_root.append(node_folder)
+            node_filename = ElementTree.Element('filename')
+            node_filename.text = d[2]
+            node_root.append(node_filename)
+            node_size = ElementTree.Element('size')
+            node_width = ElementTree.Element('width')
+            node_width.text = str(d[4])
+            node_size.append(node_width)
+            node_height = ElementTree.Element('height')
+            node_height.text = str(d[5])
+            node_size.append(node_height)
+            node_depth = ElementTree.Element('depth')
+            node_depth.text = '1'
+            node_size.append(node_depth)
+            node_root.append(node_size)
+            node_object = ElementTree.Element('object')
+            node_name = ElementTree.Element('name')
+            node_name.text = d[11]
+            node_object.append(node_name)
+            node_difficult = ElementTree.Element('difficult')
+            node_difficult.text = '0'
+            node_object.append(node_difficult)
+            node_bndbox = ElementTree.Element('bndbox')
+            node_xmin = ElementTree.Element('xmin')
+            node_xmin.text = str(d[9])
+            node_bndbox.append(node_xmin)
+            node_ymin = ElementTree.Element('ymin')
+            node_ymin.text = str(d[10])
+            node_bndbox.append(node_ymin)
+            node_xmax = ElementTree.Element('xmax')
+            node_xmax.text = str(int(d[9]) + int(d[7]))
+            node_bndbox.append(node_xmax)
+            node_ymax = ElementTree.Element('ymax')
+            node_ymax.text = str(int(d[10]) + int(d[8]))
+            node_bndbox.append(node_ymax)
+            node_object.append(node_bndbox)
+            node_root.append(node_object)
+            tree._setroot(node_root)
+            tree.write('./temp/' + filename + '.xml')
+
+            zipping('./temp')
+
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't generate xml file"}), 500
     
-    node_folder = ElementTree.Element('folder')
-    node_folder.text = 'GTSDB'
-    node_root.append(node_folder)
-    
-    node_filename = ElementTree.Element('filename')
-    node_filename.text = '000001.jpg'
-    node_root.append(node_filename)
-    
-    node_size = ElementTree.Element('size')
-    node_width = ElementTree.Element('width')
-    node_width.text = '500'
-    node_size.append(node_width)
-    
-    node_height = ElementTree.Element('height')
-    node_height.text = '375'
-    node_size.append(node_height)
-    
-    node_depth = ElementTree.Element('depth')
-    node_depth.text = '3'
-    node_size.append(node_depth)
-
-    node_root.append(node_size)
-
-    for x, y in images.items() :
-        node_object = ElementTree.Element('object')
-        node_name = ElementTree.Element('name')
-        node_name.text = y['name']
-        node_object.append(node_name)
-        
-        node_difficult = ElementTree.Element('difficult')
-        node_difficult.text = '0'
-        node_object.append(node_difficult)
-
-        node_bndbox = ElementTree.Element('bndbox')
-        node_xmin = ElementTree.Element('xmin')
-        node_xmin.text = str(y['xmin'])
-        node_bndbox.append(node_xmin)
-        node_ymin = ElementTree.Element('ymin')
-        node_ymin.text = str(y['ymin'])
-        node_bndbox.append(node_ymin)
-        node_xmax = ElementTree.Element('xmax')
-        node_xmax.text = str(y['xmin'] + y['size'])
-        node_bndbox.append(node_xmax)
-        node_ymax = ElementTree.Element('ymax')
-        node_ymax.text = str(y['xmin'] + y['size'])
-        node_bndbox.append(node_ymax)
-        node_object.append(node_bndbox)
-        node_root.append(node_object)
-
-    tree._setroot(node_root)
-    tree.write("../templates/" + filename + ".xml")
+    try:
+        return send_file('../temp.zip', attachment_filename='label.zip', as_attachment=True)
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "can't send zip file"}), 500
