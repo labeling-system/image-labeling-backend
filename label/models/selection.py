@@ -7,6 +7,8 @@ from xml.dom.minidom import parseString
 from zipfile import ZipFile
 import os
 import http.client
+import xmltodict
+import json
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
@@ -159,16 +161,15 @@ def zipping(directory):
                 # Add file to zip
                 zipObj.write(filePath)
 
-@selection_bp.route("/download", methods=['GET'])
 def generateXML():
     try:
         data = get_all_labeled()
-        print(data)
+        # print(data)
 
         for d in data:
-            print(d[2].split('.'))
+            # print(d[2].split('.'))
             filename = d[2].split('.')[0]
-            print(filename)
+            # print(filename)
             tree = ElementTree.ElementTree()
             node_root = ElementTree.Element('annotation')
             node_folder = ElementTree.Element('folder')
@@ -211,16 +212,42 @@ def generateXML():
             node_object.append(node_bndbox)
             node_root.append(node_object)
             tree._setroot(node_root)
-            tree.write('./temp/' + filename + '.xml')
-
-            zipping('./temp')
+            tree.write('./temp/xml/' + filename + '.xml')
 
     except Error as e:
         print(e)
         return jsonify({"error": "can't generate xml file"}), 500
-    
+
+@selection_bp.route("/downloadxml", methods=['GET'])
+def downloadxml():
     try:
-        return send_file('../temp.zip', attachment_filename='label.zip', as_attachment=True)
+        generateXML()
+        # generateJSON()
+        zipping('./temp/xml')
+        return send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
+
+# def generateJSON():
+#     try:
+#         generateXML()
+#         for folderName, subfolders, filenames in os.walk('./temp/xml'):
+#             for filename in filenames:
+#                 xml = filename.read()
+#                 f = filename.split('.')[0]
+#                 with open(f + '.json', 'w') as out_file:
+#                     json.dump(xmltodict.parse(xml), out_file)
+#     except Exception as e:
+#         print(e)
+
+# @selection_bp.route("/downloadjson", methods=['GET'])
+# def downloadjson():
+#     try:
+#         # generateXML()
+#         generateJSON()
+#         zipping('./temp/json')
+#         return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+#     except Exception as e:
+#         print(e)
+#         return jsonify({"error": "can't send zip file"}), 500
