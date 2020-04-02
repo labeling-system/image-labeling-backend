@@ -1,0 +1,1 @@
+<annotation><folder>upload</folder><filename>zooTopiasm.png</filename><size><width>800</width><height>449</height><depth>1</depth></size><object><name>cat</name><difficult>0</difficult><bndbox><xmin>10.0</xmin><ymin>15.0</ymin><xmax>60</xmax><ymax>65</ymax></bndbox></object></annotation>
