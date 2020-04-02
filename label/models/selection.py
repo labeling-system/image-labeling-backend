@@ -101,14 +101,17 @@ def get_selection_properties(image_id):
 
 
 
-@selection_bp.route('/selection/next', methods=['GET', 'POST'])
+@selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
 def save_image(image_id):
+    #req = request.get_json()
+    #print(req)
+    #image_id = req[0]
     #req = request.get_json()
     length, width, x, y, label = get_selection_properties(image_id)
 
     try:
         cur = db.conn.cursor()
-        cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (id_image, length, width, x, y, label))
+        cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, length, width, x, y, label))
         db.conn.commit()
         cur.close()
     except Error as e:
