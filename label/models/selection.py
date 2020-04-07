@@ -188,17 +188,11 @@ def generateXML():
             node_height = ElementTree.Element('height')
             node_height.text = str(d[5])
             node_size.append(node_height)
-            node_depth = ElementTree.Element('depth')
-            node_depth.text = '1'
-            node_size.append(node_depth)
             node_root.append(node_size)
             node_object = ElementTree.Element('object')
             node_name = ElementTree.Element('name')
             node_name.text = d[11]
             node_object.append(node_name)
-            node_difficult = ElementTree.Element('difficult')
-            node_difficult.text = '0'
-            node_object.append(node_difficult)
             node_bndbox = ElementTree.Element('bndbox')
             node_xmin = ElementTree.Element('xmin')
             node_xmin.text = str(d[9])
@@ -232,25 +226,25 @@ def downloadxml():
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
 
-# def generateJSON():
-#     try:
-#         generateXML()
-#         for folderName, subfolders, filenames in os.walk('./temp/xml'):
-#             for filename in filenames:
-#                 xml = filename.read()
-#                 f = filename.split('.')[0]
-#                 with open(f + '.json', 'w') as out_file:
-#                     json.dump(xmltodict.parse(xml), out_file)
-#     except Exception as e:
-#         print(e)
+def generateJSON():
+    try:
+        generateXML()
+        for folderName, subfolders, filenames in os.walk('./temp/xml'):
+            for filename in filenames:
+                xml = filename.read()
+                f = filename.split('.')[0]
+                with open(f + '.json', 'w') as out_file:
+                    json.dump(xmltodict.parse(xml), out_file)
+    except Exception as e:
+        print(e)
 
 # @selection_bp.route("/downloadjson", methods=['GET'])
-# def downloadjson():
-#     try:
-#         # generateXML()
-#         generateJSON()
-#         zipping('./temp/json')
-#         return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
-#     except Exception as e:
-#         print(e)
-#         return jsonify({"error": "can't send zip file"}), 500
+def downloadjson():
+    try:
+        # generateXML()
+        generateJSON()
+        zipping('./temp/json')
+        return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "can't send zip file"}), 500
