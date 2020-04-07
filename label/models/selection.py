@@ -2,8 +2,8 @@ from flask import Blueprint, jsonify, request, Response, make_response, send_fil
 from sqlite3 import Error
 from label.database import db
 from label.utils import const
-from xml.etree import ElementTree
-from xml.dom.minidom import parseString
+from xml.etree import ElementTree as ET
+from xml.dom import minidom
 from zipfile import ZipFile
 import os
 import http.client
@@ -173,43 +173,46 @@ def generateXML():
             # print(d[2].split('.'))
             filename = d[2].split('.')[0]
             # print(filename)
-            tree = ElementTree.ElementTree()
-            node_root = ElementTree.Element('annotation')
-            node_folder = ElementTree.Element('folder')
+            tree = ET.ElementTree()
+            node_root = ET.Element('annotation')
+            node_folder = ET.Element('folder')
             node_folder.text = 'upload'
             node_root.append(node_folder)
-            node_filename = ElementTree.Element('filename')
+            node_filename = ET.Element('filename')
             node_filename.text = d[2]
             node_root.append(node_filename)
-            node_size = ElementTree.Element('size')
-            node_width = ElementTree.Element('width')
+            node_size = ET.Element('size')
+            node_width = ET.Element('width')
             node_width.text = str(d[4])
             node_size.append(node_width)
-            node_height = ElementTree.Element('height')
+            node_height = ET.Element('height')
             node_height.text = str(d[5])
             node_size.append(node_height)
             node_root.append(node_size)
-            node_object = ElementTree.Element('object')
-            node_name = ElementTree.Element('name')
+            node_object = ET.Element('object')
+            node_name = ET.Element('name')
             node_name.text = d[11]
             node_object.append(node_name)
-            node_bndbox = ElementTree.Element('bndbox')
-            node_xmin = ElementTree.Element('xmin')
+            node_bndbox = ET.Element('bndbox')
+            node_xmin = ET.Element('xmin')
             node_xmin.text = str(d[9])
             node_bndbox.append(node_xmin)
-            node_ymin = ElementTree.Element('ymin')
+            node_ymin = ET.Element('ymin')
             node_ymin.text = str(d[10])
             node_bndbox.append(node_ymin)
-            node_xmax = ElementTree.Element('xmax')
+            node_xmax = ET.Element('xmax')
             node_xmax.text = str(int(d[9]) + int(d[7]))
             node_bndbox.append(node_xmax)
-            node_ymax = ElementTree.Element('ymax')
+            node_ymax = ET.Element('ymax')
             node_ymax.text = str(int(d[10]) + int(d[8]))
             node_bndbox.append(node_ymax)
             node_object.append(node_bndbox)
             node_root.append(node_object)
             tree._setroot(node_root)
-            tree.write('./temp/xml/' + filename + '.xml')
+
+            xmlstr = minidom.parseString(ET.tostring(node_root)).toprettyxml(indent='    ')
+            with open('./temp/xml/' + filename + '.xml', 'w') as f:
+                f.write(xmlstr)
 
     except Error as e:
         print(e)
