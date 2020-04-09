@@ -11,27 +11,18 @@ user_bp = Blueprint('user_bp', __name__,
 @user_bp.route('/login', methods=['POST'])
 def login():
     req = request.get_json()
-    res = False
 
     try:
         username = req['username']
         password = req['password']
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM users")
-        rows = cur.fetchall()
-
-        for row in rows:
-            db_user = row[1]
-            db_pass = row[3]
-            if db_user == username and db_pass == password:
-                db_role = row[2]
-                res = True
-
+        cur.execute("SELECT * FROM users WHERE name=:username AND password=:password ", {"username": username, "password": password})
+        row = cur.fetchone()
         cur.close()
 
-        if res:
+        if len(row) != 0:
             return jsonify({
-                "role": db_role
+                "role": row[2]
             }), 200
         else:
             return jsonify({

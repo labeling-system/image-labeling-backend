@@ -7,12 +7,11 @@ label_bp = Blueprint('label_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
 
-#working image handling
 @label_bp.route('/label', methods=['GET'])
-def getMostUsedLabel():
+def getMostUsedLabel(max=10):
     try:
         cur = db.conn.cursor()
-        cur.execute("SELECT name FROM label ORDER BY counter DESC LIMIT 10")
+        cur.execute("SELECT name FROM label ORDER BY counter DESC LIMIT :max", {"max": max})
         rows = cur.fetchall()
         cur.close()
 
@@ -23,7 +22,4 @@ def getMostUsedLabel():
     return jsonify({
         "labelList": rows
     }), 200
-
-    
-
 
