@@ -54,40 +54,28 @@ def get_working_image():
         return jsonify({"error": "can't get image from database"})
  
 
-# Fetch an image from given id, buat rika
-# akan menerima id, return nama file, status, last_update
-@selection_bp.route('/selection/<id>', methods=['GET', 'POST'])
-def get_working_image_from_id(id):
+@selection_bp.route('/selection/<image_id>', methods=['GET'])
+def get_selection_properties(image_id):
     try:
         cur = db.conn.cursor()
-        print(id)
-        cur.execute("SELECT * FROM images WHERE id_image=:id", {"id": id})
-        row = cur.fetchone()
+        print(image_id)
+        cur.execute("SELECT x,y,length,width,label FROM selections WHERE id_image=:id", {"id": image_id})
+        rows = cur.fetchall()
+        cur.execute("SELECT COUNT(*) FROM selections WHERE id_image=:id", {"id": image_id})
+        count = cur.fetchone()
         cur.close()
 
     except Error as e:
         print(e)
-        return jsonify({"error": "can't fetch one image"}), 500
+        return jsonify({"error": "can't get selection from database"}), 500
     
-    if row == None:
+    if rows == None:
         return jsonify({"error": "id for image not found"}), 404
 
     return jsonify({
-        "filename": row[FILENAME],
-        "status": row[STATUS],
-        "last_update": row[LAST_UPDATE]
+        "selections": rows,
+        "count" : count
     }), 200
-
-
-#akan diimplementasikan dan digabungkan dengan kode lukas
-def get_selection_properties(image_id):
-    length = "60px"
-    width = "30px"
-    x = 2 
-    y = 4
-    label = "human"
-    return length, width, x, y, label
-
 
 
 @selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
