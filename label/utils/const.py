@@ -7,3 +7,6 @@ LABELER='labeler'
 UNLABELED='unlabeled'
 LABELED='labeled'
 EDITING='editing'
+
+# Error code
+ERROR='-999'

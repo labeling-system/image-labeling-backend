@@ -17,51 +17,42 @@ is_initiated = False
 ID_IMAGE = 0
 STATUS = 1
 FILENAME = 2
-#working image handling
-@selection_bp.route('/selection/initiate', methods=['GET', 'POST'])
-def initiate_image():
-    try:
-        image_id, filename = get_working_image()
-    except Error as e:
-        return jsonify({"error": "can't get image from database"}), 500
-
-    update_image_status(const.EDITING, image_id)
-    
-    return jsonify({
-        "image_id": image_id,
-        "filename": filename
-    }), 200
 
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
     try:
         image_id, filename = get_working_image()
-        update_image_status(const.EDITING, image_id)
-        
-        return jsonify({
-            "image_id": image_id,
-            "filename": filename
-        }), 200
+        if (image_id != const.ERROR and filename != const.ERROR):
+            update_image_status(const.EDITING, image_id)  
+            return jsonify({
+                "image_id": image_id,
+                "filename": filename
+            }), 200
+        else:
+            return jsonify({"error": "error occured. can't get image from database"}) 
     except Error as e:
         print(e)
         return jsonify({"error": "can't get image from database"})
 
 
 def get_working_image():
-    # try:
+    try:
         cur = db.conn.cursor()
         cur.execute("SELECT * FROM images WHERE status=?", [const.UNLABELED])
         row = cur.fetchone()
         cur.close()
-        image_id = row[ID_IMAGE]
-        filename = row[FILENAME]
-        print("abc", image_id, filename)
-        return (image_id, filename)
+        if (row != None):
+            image_id = row[ID_IMAGE]
+            filename = row[FILENAME]
+            print("abc", image_id, filename)
+            return (image_id, filename)
+        else:
+            return(const.ERROR, const.ERROR)
 
-    # except Error as e:
-    #     print(e)
-    #     return jsonify({"error": "can't get image from database"})
-
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't get image from database"})
+ 
 
 # Fetch an image from given id, buat rika
 # akan menerima id, return nama file, status, last_update
@@ -112,16 +103,18 @@ def save_image(image_id):
         cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, length, width, x, y, label))
         db.conn.commit()
         cur.close()
+        
         update_image_status(const.LABELED, image_id)
 
         image_id, filename = get_working_image()
-
-        update_image_status(const.EDITING, image_id)
-
-        return jsonify({
-            "image_id": image_id,
-            "filename": filename
-        }), 200
+        if (image_id != const.ERROR and filename != const.ERROR):
+            update_image_status(const.EDITING, image_id)  
+            return jsonify({
+                "image_id": image_id,
+                "filename": filename
+            }), 200
+        else:
+            return jsonify({"error": "error occured. can't get image from database"}) 
     except Error as e:
         return jsonify({"error": "can't fetch image"})
 
