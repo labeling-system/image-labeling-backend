@@ -170,9 +170,9 @@ def generateXML():
         # print(data)
 
         for d in data:
-            # print(d[2].split('.'))
+            print(d[2].split('.'))
             filename = d[2].split('.')[0]
-            # print(filename)
+            print(filename)
             tree = ET.ElementTree()
             node_root = ET.Element('annotation')
             node_folder = ET.Element('folder')
@@ -221,8 +221,8 @@ def generateXML():
 @selection_bp.route("/downloadxml", methods=['GET'])
 def downloadxml():
     try:
+        print("downloadxml")
         generateXML()
-        # generateJSON()
         zipping('./temp/xml')
         return send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
     except Exception as e:
@@ -231,23 +231,37 @@ def downloadxml():
 
 def generateJSON():
     try:
-        generateXML()
-        for folderName, subfolders, filenames in os.walk('./temp/xml'):
-            for filename in filenames:
-                xml = filename.read()
-                f = filename.split('.')[0]
-                with open(f + '.json', 'w') as out_file:
-                    json.dump(xmltodict.parse(xml), out_file)
+        data = get_all_labeled()
+        print(data)
+        for d in data:
+            filename = d[2].split('.')[0]
+            print(filename)
+
+            dictionary = {
+                "halo" : d[0],
+                "hola" : d[1],
+                "ahoy" : d[2]
+            }
+
+            print(dictionary)
+
+            json_object = json.dumps(dictionary, indent= 4)
+            with open('./temp/json/' + filename + '.json', 'w') as outfile:
+                outfile.write(json_object)
+
     except Exception as e:
         print(e)
 
-# @selection_bp.route("/downloadjson", methods=['GET'])
+@selection_bp.route("/downloadjson", methods=['GET'])
 def downloadjson():
     try:
-        # generateXML()
+        print("here")
         generateJSON()
+        print("generate json file")
         zipping('./temp/json')
+        print("zipping json file")
         return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+        print("send json file")
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
