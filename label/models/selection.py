@@ -1,26 +1,29 @@
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request, Response, make_response, send_file
 from sqlite3 import Error
 from label.database import db
 from label.utils import const
-from xml.etree import ElementTree
-from xml.dom.minidom import parseString
+from xml.etree import ElementTree as ET
+from xml.dom import minidom
+from zipfile import ZipFile
+import os
+import http.client
+import xmltodict
+import json
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
                     static_folder='static')
 is_initiated = False
-a = 1
+ID_IMAGE = 0
+STATUS = 1
+FILENAME = 2
 #working image handling
-@selection_bp.route('/selection/working', methods=['GET', 'POST'])
-def working_image(is_initiated, image_id=1):
-    if is_initiated:
-        pass
-    else:
-        try:
-            image_id, filename = get_working_image()
-            is_initiated = True
-        except Error as e:
-            return jsonify({"error": "can't get image from database"}), 500
+@selection_bp.route('/selection/initiate', methods=['GET', 'POST'])
+def initiate_image():
+    try:
+        image_id, filename = get_working_image()
+    except Error as e:
+        return jsonify({"error": "can't get image from database"}), 500
 
     update_image_status(const.EDITING, image_id)
     
@@ -29,18 +32,61 @@ def working_image(is_initiated, image_id=1):
         "filename": filename
     }), 200
 
-def get_working_image():
+@selection_bp.route('/selection', methods=['GET', 'POST'])
+def working_image():
     try:
+        image_id, filename = get_working_image()
+        update_image_status(const.EDITING, image_id)
+        
+        return jsonify({
+            "image_id": image_id,
+            "filename": filename
+        }), 200
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't get image from database"})
+
+
+def get_working_image():
+    # try:
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM images WHERE status=?", const.UNLABELED)
+        cur.execute("SELECT * FROM images WHERE status=?", [const.UNLABELED])
         row = cur.fetchone()
         cur.close()
         image_id = row[ID_IMAGE]
         filename = row[FILENAME]
-        return (image_id, filename), 200
+        print("abc", image_id, filename)
+        return (image_id, filename)
+
+    # except Error as e:
+    #     print(e)
+    #     return jsonify({"error": "can't get image from database"})
+
+
+# Fetch an image from given id, buat rika
+# akan menerima id, return nama file, status, last_update
+@selection_bp.route('/selection/<id>', methods=['GET', 'POST'])
+def get_working_image_from_id(id):
+    try:
+        cur = db.conn.cursor()
+        print(id)
+        cur.execute("SELECT * FROM images WHERE id_image=:id", {"id": id})
+        row = cur.fetchone()
+        cur.close()
 
     except Error as e:
-        return jsonify({"error": "can't get image from database"}), 500
+        print(e)
+        return jsonify({"error": "can't fetch one image"}), 500
+    
+    if row == None:
+        return jsonify({"error": "id for image not found"}), 404
+
+    return jsonify({
+        "filename": row[FILENAME],
+        "status": row[STATUS],
+        "last_update": row[LAST_UPDATE]
+    }), 200
+
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
 def get_selection_properties(image_id):
@@ -53,34 +99,38 @@ def get_selection_properties(image_id):
 
 
 
-@selection_bp.route('/selection/next', methods=['GET', 'POST'])
+@selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
 def save_image(image_id):
+    #req = request.get_json()
+    #print(req)
+    #image_id = req[0]
+    #req = request.get_json()
     length, width, x, y, label = get_selection_properties(image_id)
 
     try:
         cur = db.conn.cursor()
-        cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (id_image, length, width, x, y, label))
+        cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, length, width, x, y, label))
         db.conn.commit()
         cur.close()
+        update_image_status(const.LABELED, image_id)
+
+        image_id, filename = get_working_image()
+
+        update_image_status(const.EDITING, image_id)
+
+        return jsonify({
+            "image_id": image_id,
+            "filename": filename
+        }), 200
     except Error as e:
-        return jsonify({"error": "can't fetch image"}), 500
+        return jsonify({"error": "can't fetch image"})
 
-    update_image_status(const.LABELED, image_id)
-
-    image_id, filename = get_working_image()
-
-    update_image_status(const.EDITING, image_id)
-
-    return jsonify({
-        "image_id": image_id,
-        "filename": filename
-    }), 200
 
 
 def update_image_status(status, id_image):
     try:
         cur = db.conn.cursor()
-        cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, image_id))
+        cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, id_image))
         db.conn.commit()
         cur.close()
         return Response(status=200)
@@ -88,7 +138,6 @@ def update_image_status(status, id_image):
         return jsonify({"error": "can't fetch image"}), 500
 
 # Fetch all labeled image    
-@selection_bp.route("/others", methods=['GET'])
 def get_all_labeled():
     try:
         cur = db.conn.cursor()
@@ -97,82 +146,118 @@ def get_all_labeled():
         cur.close()
 
     except Error as e:
-        return jsonify({"error": "can't fetch user's data"}), 500
+        print(e)
     
-    return jsonify({
-        "labeled": rows
-    }), 200
+    return rows
 
-def genXML(filename):
-    images = {
-        'image1' : {
-            'name' : 'A',
-            'xmin' : 10,
-            'ymin' : 10,
-            'size' : 20
-        },
-        'image2' : {
-            'name' : 'B',
-            'xmin' : 15,
-            'ymin' : 15,
-            'size' : 20
-        }
-    }
+def zipping(directory):
+    with ZipFile(directory + '.zip', 'w') as zipObj:
+        # Iterate over all the files in directory
+        for folderName, subfolders, filenames in os.walk(directory):
+            for filename in filenames:
+                #create complete filepath of file in directory
+                filePath = os.path.join(folderName, filename)
+                # Add file to zip
+                zipObj.write(filePath)
 
-    for x, y in images.items():
-        print(y['name'])
+def generateXML():
+    try:
+        data = get_all_labeled()
+        # print(data)
 
-    tree = ElementTree.ElementTree() 
-    node_root = ElementTree.Element('annotation')
-    
-    node_folder = ElementTree.Element('folder')
-    node_folder.text = 'GTSDB'
-    node_root.append(node_folder)
-    
-    node_filename = ElementTree.Element('filename')
-    node_filename.text = '000001.jpg'
-    node_root.append(node_filename)
-    
-    node_size = ElementTree.Element('size')
-    node_width = ElementTree.Element('width')
-    node_width.text = '500'
-    node_size.append(node_width)
-    
-    node_height = ElementTree.Element('height')
-    node_height.text = '375'
-    node_size.append(node_height)
-    
-    node_depth = ElementTree.Element('depth')
-    node_depth.text = '3'
-    node_size.append(node_depth)
+        for d in data:
+            print(d[2].split('.'))
+            filename = d[2].split('.')[0]
+            print(filename)
+            tree = ET.ElementTree()
+            node_root = ET.Element('annotation')
+            node_folder = ET.Element('folder')
+            node_folder.text = 'upload'
+            node_root.append(node_folder)
+            node_filename = ET.Element('filename')
+            node_filename.text = d[2]
+            node_root.append(node_filename)
+            node_size = ET.Element('size')
+            node_width = ET.Element('width')
+            node_width.text = str(d[4])
+            node_size.append(node_width)
+            node_height = ET.Element('height')
+            node_height.text = str(d[5])
+            node_size.append(node_height)
+            node_root.append(node_size)
+            node_object = ET.Element('object')
+            node_name = ET.Element('name')
+            node_name.text = d[11]
+            node_object.append(node_name)
+            node_bndbox = ET.Element('bndbox')
+            node_xmin = ET.Element('xmin')
+            node_xmin.text = str(d[9])
+            node_bndbox.append(node_xmin)
+            node_ymin = ET.Element('ymin')
+            node_ymin.text = str(d[10])
+            node_bndbox.append(node_ymin)
+            node_xmax = ET.Element('xmax')
+            node_xmax.text = str(int(d[9]) + int(d[7]))
+            node_bndbox.append(node_xmax)
+            node_ymax = ET.Element('ymax')
+            node_ymax.text = str(int(d[10]) + int(d[8]))
+            node_bndbox.append(node_ymax)
+            node_object.append(node_bndbox)
+            node_root.append(node_object)
+            tree._setroot(node_root)
 
-    node_root.append(node_size)
+            xmlstr = minidom.parseString(ET.tostring(node_root)).toprettyxml(indent='    ')
+            with open('./temp/xml/' + filename + '.xml', 'w') as f:
+                f.write(xmlstr)
 
-    for x, y in images.items() :
-        node_object = ElementTree.Element('object')
-        node_name = ElementTree.Element('name')
-        node_name.text = y['name']
-        node_object.append(node_name)
-        
-        node_difficult = ElementTree.Element('difficult')
-        node_difficult.text = '0'
-        node_object.append(node_difficult)
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't generate xml file"}), 500
 
-        node_bndbox = ElementTree.Element('bndbox')
-        node_xmin = ElementTree.Element('xmin')
-        node_xmin.text = str(y['xmin'])
-        node_bndbox.append(node_xmin)
-        node_ymin = ElementTree.Element('ymin')
-        node_ymin.text = str(y['ymin'])
-        node_bndbox.append(node_ymin)
-        node_xmax = ElementTree.Element('xmax')
-        node_xmax.text = str(y['xmin'] + y['size'])
-        node_bndbox.append(node_xmax)
-        node_ymax = ElementTree.Element('ymax')
-        node_ymax.text = str(y['xmin'] + y['size'])
-        node_bndbox.append(node_ymax)
-        node_object.append(node_bndbox)
-        node_root.append(node_object)
+@selection_bp.route("/downloadxml", methods=['GET'])
+def downloadxml():
+    try:
+        print("downloadxml")
+        generateXML()
+        zipping('./temp/xml')
+        return send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "can't send zip file"}), 500
 
-    tree._setroot(node_root)
-    tree.write("../templates/" + filename + ".xml")
+def generateJSON():
+    try:
+        data = get_all_labeled()
+        print(data)
+        for d in data:
+            filename = d[2].split('.')[0]
+            print(filename)
+
+            dictionary = {
+                "halo" : d[0],
+                "hola" : d[1],
+                "ahoy" : d[2]
+            }
+
+            print(dictionary)
+
+            json_object = json.dumps(dictionary, indent= 4)
+            with open('./temp/json/' + filename + '.json', 'w') as outfile:
+                outfile.write(json_object)
+
+    except Exception as e:
+        print(e)
+
+@selection_bp.route("/downloadjson", methods=['GET'])
+def downloadjson():
+    try:
+        print("here")
+        generateJSON()
+        print("generate json file")
+        zipping('./temp/json')
+        print("zipping json file")
+        return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+        print("send json file")
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "can't send zip file"}), 500
