@@ -81,8 +81,8 @@ def get_working_image_from_id(id):
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
 def get_selection_properties(image_id):
-    length = "60px"
-    width = "30px"
+    length = "60"
+    width = "30"
     x = 2 
     y = 4
     label = "human"
