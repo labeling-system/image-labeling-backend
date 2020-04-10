@@ -44,6 +44,7 @@ def get_all_image(page):
 def delete_all_image():
     try:
         cur = db.conn.cursor()
+        cur.execute("DELETE FROM selections")
         cur.execute("DELETE FROM images")
         count = cur.rowcount
         cur.close()
@@ -99,6 +100,7 @@ def get_image(id):
 @image_bp.route('/image', methods=['POST'])
 def post_image():
     req = request.get_json()
+    print(req)
     
     try:
         cur = db.conn.cursor()
