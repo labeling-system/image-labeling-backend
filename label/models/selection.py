@@ -79,7 +79,7 @@ def get_selection_properties(image_id):
 
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
-def get_selection_properties(image_id):
+def get_raw_selection_properties(image_id):
     length = "60"
     width = "30"
     x = 2 
@@ -95,7 +95,7 @@ def save_image(image_id):
     #print(req)
     #image_id = req[0]
     #req = request.get_json()
-    length, width, x, y, label = get_selection_properties(image_id)
+    length, width, x, y, label = get_raw_selection_properties(image_id)
 
     try:
         cur = db.conn.cursor()
