@@ -35,24 +35,20 @@ def initiate_image():
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
     try:
-        print("a")
         image_id, filename = get_working_image()
+        update_image_status(const.EDITING, image_id)
+        
+        return jsonify({
+            "image_id": image_id,
+            "filename": filename
+        }), 200
     except Error as e:
-        print("b")
         print(e)
         return jsonify({"error": "can't get image from database"})
 
-    update_image_status(const.EDITING, image_id)
-    
-    return jsonify({
-        "image_id": image_id,
-        "filename": filename
-    }), 200
 
 def get_working_image():
     # try:
-
-        print("c")
         cur = db.conn.cursor()
         cur.execute("SELECT * FROM images WHERE status=?", [const.UNLABELED])
         row = cur.fetchone()
@@ -116,19 +112,19 @@ def save_image(image_id):
         cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, length, width, x, y, label))
         db.conn.commit()
         cur.close()
+        update_image_status(const.LABELED, image_id)
+
+        image_id, filename = get_working_image()
+
+        update_image_status(const.EDITING, image_id)
+
+        return jsonify({
+            "image_id": image_id,
+            "filename": filename
+        }), 200
     except Error as e:
-        return jsonify({"error": "can't fetch image"}), 500
+        return jsonify({"error": "can't fetch image"})
 
-    update_image_status(const.LABELED, image_id)
-
-    image_id, filename = get_working_image()
-
-    update_image_status(const.EDITING, image_id)
-
-    return jsonify({
-        "image_id": image_id,
-        "filename": filename
-    }), 200
 
 
 def update_image_status(status, id_image):
