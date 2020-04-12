@@ -17,16 +17,20 @@ is_initiated = False
 ID_IMAGE = 0
 STATUS = 1
 FILENAME = 2
+WIDTH = 4
+HEIGHT = 5
 
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
     try:
-        image_id, filename = get_working_image()
+        image_id, filename, width, height = get_working_image()
         if (image_id != const.ERROR and filename != const.ERROR):
             update_image_status(const.EDITING, image_id)  
             return jsonify({
                 "image_id": image_id,
-                "filename": filename
+                "filename": filename,
+                "width": width,
+                "height": height
             }), 200
         else:
             return jsonify({"error": "error occured. can't get image from database"}) 
@@ -44,8 +48,10 @@ def get_working_image():
         if (row != None):
             image_id = row[ID_IMAGE]
             filename = row[FILENAME]
+            width = row[WIDTH]
+            height = row[HEIGHT]
             print("abc", image_id, filename)
-            return (image_id, filename)
+            return (image_id, filename, width, height)
         else:
             return(const.ERROR, const.ERROR)
 
@@ -105,12 +111,14 @@ def save_image(image_id):
         
         update_image_status(const.LABELED, image_id)
 
-        image_id, filename = get_working_image()
+        image_id, filename, width, height = get_working_image()
         if (image_id != const.ERROR and filename != const.ERROR):
             update_image_status(const.EDITING, image_id)  
             return jsonify({
                 "image_id": image_id,
-                "filename": filename
+                "filename": filename,
+                "width": width,
+                "height": height
             }), 200
         else:
             return jsonify({"error": "error occured. can't get image from database"}) 
