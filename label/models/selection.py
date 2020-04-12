@@ -230,7 +230,10 @@ def downloadxml():
         print("downloadxml")
         generate_all_xml()
         zipping('./temp/xml')
-        return send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
@@ -293,6 +296,7 @@ def get_annotations(filename, data):
                 "id": d[6]
             }
             selections.append(tmp)
+    print(selections)
     return selections
 
 def generate_new_json(filename, all_data, data):
@@ -310,6 +314,7 @@ def generate_new_json(filename, all_data, data):
 def generate_all_json():
     try:
         data = get_all_labeled()
+        print(data)
         curr_filename = data[0][2].split('.')[0]
         for d in data:
             filename = d[2].split('.')[0]
@@ -326,7 +331,10 @@ def downloadjson():
         print("downloadjson")
         generate_all_json()
         zipping('./temp/json')
-        return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
