@@ -9,6 +9,7 @@ import os
 import http.client
 import xmltodict
 import json
+from datetime import date
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
@@ -137,11 +138,11 @@ def update_image_status(status, id_image):
     except Error as e:
         return jsonify({"error": "can't fetch image"}), 500
 
-# Fetch all labeled image    
+# fetch all labeled image    
 def get_all_labeled():
     try:
         cur = db.conn.cursor()
-        cur.execute("SELECT * FROM images JOIN selections USING(id_image) WHERE images.status = 'labeled'")
+        cur.execute("SELECT * FROM (select * from images JOIN selections USING(id_image) WHERE images.status = 'labeled' ORDER BY filename) as labeled JOIN label WHERE labeled.label == label.name")
         rows = cur.fetchall()
         cur.close()
 
@@ -150,6 +151,7 @@ def get_all_labeled():
     
     return rows
 
+# function to get zip file of all json/xml generated file
 def zipping(directory):
     with ZipFile(directory + '.zip', 'w') as zipObj:
         # Iterate over all the files in directory
@@ -160,35 +162,34 @@ def zipping(directory):
                 # Add file to zip
                 zipObj.write(filePath)
 
-def generateXML():
-    try:
-        data = get_all_labeled()
-        # print(data)
+# functions to generate all xml file for all labeled images
+def get_image_info_xml(data):
+    node_root = ET.Element('annotation')
+    node_folder = ET.Element('folder')
+    node_folder.text = 'public/images'
+    node_root.append(node_folder)
+    node_filename = ET.Element('filename')
+    node_filename.text = data[2]
+    node_root.append(node_filename)
+    node_size = ET.Element('size')
+    node_width = ET.Element('width')
+    node_width.text = str(float(data[4]))
+    node_size.append(node_width)
+    node_height = ET.Element('height')
+    node_height.text = str(float(data[5]))
+    node_size.append(node_height)
+    node_root.append(node_size)
 
-        for d in data:
-            print(d[2].split('.'))
-            filename = d[2].split('.')[0]
-            print(filename)
-            tree = ET.ElementTree()
-            node_root = ET.Element('annotation')
-            node_folder = ET.Element('folder')
-            node_folder.text = 'upload'
-            node_root.append(node_folder)
-            node_filename = ET.Element('filename')
-            node_filename.text = d[2]
-            node_root.append(node_filename)
-            node_size = ET.Element('size')
-            node_width = ET.Element('width')
-            node_width.text = str(d[4])
-            node_size.append(node_width)
-            node_height = ET.Element('height')
-            node_height.text = str(d[5])
-            node_size.append(node_height)
-            node_root.append(node_size)
-            node_object = ET.Element('object')
+    return node_root
+
+def get_objects_xml(filename, data):
+    node_object = ET.Element('object')
+    for d in data:
+        if (d[2].split('.')[0] == filename):
             node_name = ET.Element('name')
             node_name.text = d[11]
             node_object.append(node_name)
+
             node_bndbox = ET.Element('bndbox')
             node_xmin = ET.Element('xmin')
             node_xmin.text = str(d[9])
@@ -197,18 +198,35 @@ def generateXML():
             node_ymin.text = str(d[10])
             node_bndbox.append(node_ymin)
             node_xmax = ET.Element('xmax')
-            node_xmax.text = str(int(d[9]) + int(d[7]))
+            node_xmax.text = str(float(d[9]) + float(d[7]))
             node_bndbox.append(node_xmax)
             node_ymax = ET.Element('ymax')
-            node_ymax.text = str(int(d[10]) + int(d[8]))
+            node_ymax.text = str(float(d[10]) + float(d[8]))
             node_bndbox.append(node_ymax)
             node_object.append(node_bndbox)
-            node_root.append(node_object)
-            tree._setroot(node_root)
+    
+    return node_object
 
-            xmlstr = minidom.parseString(ET.tostring(node_root)).toprettyxml(indent='    ')
-            with open('./temp/xml/' + filename + '.xml', 'w') as f:
-                f.write(xmlstr)
+def generate_new_xml(filename, data, all_data):
+    tree = ET.ElementTree()
+    node_root = get_image_info_xml(data)
+    node_object = get_objects_xml(filename, all_data)
+    node_root.append(node_object)
+    tree._setroot(node_root)
+
+    xmlstr = minidom.parseString(ET.tostring(node_root)).toprettyxml(indent='   ')
+    with open('./temp/xml/' + filename + '.xml', 'w') as f:
+        f.write(xmlstr)
+
+def generate_all_xml():
+    try:
+        data = get_all_labeled()
+        curr_filename = data[0][2].split('.')[0]
+        for d in data:
+            filename = d[2].split('.')[0]
+            if (d == data[0] or filename != curr_filename):
+                curr_filename = filename
+                generate_new_xml(filename, d, data)
 
     except Error as e:
         print(e)
@@ -218,32 +236,97 @@ def generateXML():
 def downloadxml():
     try:
         print("downloadxml")
-        generateXML()
+        generate_all_xml()
         zipping('./temp/xml')
-        return send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
 
-def generateJSON():
+# functions to generate all json file for all labeled images
+def get_all_labelname():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT id_label, name FROM  label")
+        rows = cur.fetchall()
+        cur.close()
+
+    except Error as e:
+        print(e)
+    
+    return rows
+
+def get_info_json():
+    today_date = date.today()
+    info = {
+        "year": 2020,
+        "version": "1.0",
+        "description": "Global image dataset",
+        "contributor": "ppl-label-02-bounding_box",
+        "url": "tbd",
+        "date_created": str(today_date)
+    }
+    return info
+
+
+def get_categories_json():
+    labels = get_all_labelname()
+    list_label = []
+    for label in labels:
+        id = label[0]
+        name = label[1]
+        tmp = {"id": id, "name": name}
+        list_label.append(tmp)
+    return list_label
+
+def get_image_json(data):
+    tmp = {
+        "id": data[0],
+        "width": data[4],
+        "height": data[5],
+        "filename": data[2]
+    }
+    return tmp
+
+def get_annotations(filename, data):
+    selections = []
+    for d in data:
+        if (d[2].split('.')[0] == filename):
+            tmp = {
+                "segmentation": [d[9], d[10], d[9] + float(d[7]), d[10] + float(d[8])],
+                "area": float(d[7]) * float(d[8]),
+                "image_id": d[0],
+                "bbox": [d[9], d[10], float(d[7]), float(d[8])],
+                "category_id": d[12],
+                "id": d[6]
+            }
+            selections.append(tmp)
+    return selections
+
+def generate_new_json(filename, all_data, data):
+    object_dict = {
+        "info": get_info_json(),
+        "categories": get_categories_json(),
+        "image": get_image_json(data),
+        "annotations": get_annotations(filename, all_data)
+    }
+
+    json_object = json.dumps(object_dict, indent=4, sort_keys=False)
+    with open('./temp/json/' + filename + '.json', 'w') as outfile:
+                outfile.write(json_object)
+
+def generate_all_json():
     try:
         data = get_all_labeled()
-        print(data)
+        curr_filename = data[0][2].split('.')[0]
         for d in data:
             filename = d[2].split('.')[0]
-            print(filename)
-
-            dictionary = {
-                "halo" : d[0],
-                "hola" : d[1],
-                "ahoy" : d[2]
-            }
-
-            print(dictionary)
-
-            json_object = json.dumps(dictionary, indent= 4)
-            with open('./temp/json/' + filename + '.json', 'w') as outfile:
-                outfile.write(json_object)
+            if (d == data[0] or filename!=curr_filename):
+                curr_filename = filename
+                generate_new_json(filename, data, d)            
 
     except Exception as e:
         print(e)
@@ -251,13 +334,13 @@ def generateJSON():
 @selection_bp.route("/downloadjson", methods=['GET'])
 def downloadjson():
     try:
-        print("here")
-        generateJSON()
-        print("generate json file")
+        print("downloadjson")
+        generate_all_json()
         zipping('./temp/json')
-        print("zipping json file")
-        return send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
-        print("send json file")
+        response = send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
