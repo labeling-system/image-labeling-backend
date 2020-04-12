@@ -51,7 +51,6 @@ def get_working_image():
             filename = row[FILENAME]
             width = row[WIDTH]
             height = row[HEIGHT]
-            print("abc", image_id, filename)
             return (image_id, filename, width, height)
         else:
             return(const.ERROR, const.ERROR)
