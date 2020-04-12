@@ -64,6 +64,33 @@ Fetch 25 images, from given page.
   ]
 }
 ```
+#### GET /selection/{image_id}
+Fetch selections, from given image.
+
+**Response**
+```
+{
+  "count": [
+    2
+  ],
+  "selections": [
+    [
+      100.0,
+      100.0,
+      "150",
+      "150",
+      "asrap"
+    ],
+    [
+      300.0,
+      100.0,
+      "200",
+      "200",
+      "asrap lagi"
+    ]
+  ]
+}
+```
 
 #### POST /image
 Save image to database as unlabeled from given files. Files is array of 
