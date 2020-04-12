@@ -49,11 +49,14 @@ def get_working_image():
         if (row != None):
             image_id = row[ID_IMAGE]
             filename = row[FILENAME]
-            width = row[WIDTH]
-            height = row[HEIGHT]
-            return (image_id, filename, width, height)
+            if row[WIDTH] != None and row[HEIGHT] != None:
+                width = row[WIDTH]
+                height = row[HEIGHT]
+                return (image_id, filename, width, height)
+            else:
+                return(const.ERROR, const.ERROR, const.ERROR, const.ERROR)
         else:
-            return(const.ERROR, const.ERROR)
+            return(const.ERROR, const.ERROR, const.ERROR, const.ERROR)
 
     except Error as e:
         print(e)
@@ -112,7 +115,7 @@ def save_image(image_id):
         update_image_status(const.LABELED, image_id)
 
         image_id, filename, width, height = get_working_image()
-        if (image_id != const.ERROR and filename != const.ERROR):
+        if (image_id != const.ERROR and filename != const.ERROR and width != const.ERROR and height != const.ERROR):
             update_image_status(const.EDITING, image_id)  
             return jsonify({
                 "image_id": image_id,
