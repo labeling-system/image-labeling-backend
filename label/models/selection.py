@@ -288,7 +288,7 @@ def get_annotations(filename, data):
     for d in data:
         if (d[2].split('.')[0] == filename):
             tmp = {
-                "segmentation": "gatau ini apa",
+                "segmentation": [d[9], d[10], d[9] + float(d[7]), d[10] + float(d[8])],
                 "area": float(d[7]) * float(d[8]),
                 "image_id": d[0],
                 "bbox": [d[9], d[10], float(d[7]), float(d[8])],
@@ -296,7 +296,6 @@ def get_annotations(filename, data):
                 "id": d[6]
             }
             selections.append(tmp)
-    print(selections)
     return selections
 
 def generate_new_json(filename, all_data, data):
@@ -314,7 +313,6 @@ def generate_new_json(filename, all_data, data):
 def generate_all_json():
     try:
         data = get_all_labeled()
-        print(data)
         curr_filename = data[0][2].split('.')[0]
         for d in data:
             filename = d[2].split('.')[0]
