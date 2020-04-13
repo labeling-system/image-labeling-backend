@@ -20,6 +20,9 @@ STATUS = 1
 FILENAME = 2
 WIDTH = 4
 HEIGHT = 5
+LABEL_ID = 0
+LABEL_NAME = 1
+LABEL_COUNT = 2
 
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
@@ -123,6 +126,39 @@ def save_image(image_id):
             
         except Error as e:
             return jsonify({"error": "can't fetch image"})
+        
+        try:
+            print("labels")
+            cur = db.conn.cursor()
+            cur.execute("SELECT * FROM label")
+            rows = cur.fetchall()
+            cur.close()
+            print(rows)
+            isSame = False
+
+            if (label != '' ):
+                for row in rows:
+                    if (row[LABEL_NAME] == label):
+                        isSame = True
+                        label_id = row[LABEL_ID]
+                        label_name = row[LABEL_NAME]
+                        label_count = int(row[LABEL_COUNT]) + 1
+
+                        cur = db.conn.cursor()
+                        cur.execute("UPDATE label SET counter=? WHERE id_label=? ;", (label_count, label_id))
+                        db.conn.commit()
+                        cur.close()
+                        print("YASS2")
+                        break
+            if (not isSame): 
+                print("lalala", label)
+                cur = db.conn.cursor()
+                cur.execute("INSERT INTO label (name, counter) VALUES (?, ?);", (label, "0"))
+                db.conn.commit()
+                cur.close()
+                print("lalala2")
+        except Error as e:
+            return jsonify({"error": "can't connect to database"})
             
     update_image_status(const.LABELED, image_id)
 
