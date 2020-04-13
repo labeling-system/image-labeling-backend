@@ -16,6 +16,7 @@ LAST_UPDATE = 3
 REQ_FILENAME = 0
 REQ_WIDTH = 1
 REQ_HEIGHT = 2
+REQ_URI = 3
 
 COUNT_PAGE = 25
 
@@ -102,12 +103,13 @@ def post_image():
     try:
         cur = db.conn.cursor()
         for file in req['files']:
-            cur.execute("INSERT INTO images (status, filename, width, height) VALUES (:status, :filename, :width, :height);", 
+            cur.execute("INSERT INTO images (status, filename, width, height, uri) VALUES (:status, :filename, :width, :height, :uri);", 
                 {
                     "status": const.UNLABELED, 
                     "filename": file[REQ_FILENAME],
                     "width": file[REQ_WIDTH],
-                    "height": file[REQ_HEIGHT]
+                    "height": file[REQ_HEIGHT],
+                    "uri": file[REQ_URI]
                 })
         db.conn.commit()
         cur.close()
