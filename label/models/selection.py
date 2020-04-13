@@ -88,45 +88,59 @@ def get_selection_properties(image_id):
 
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
-def get_raw_selection_properties(image_id):
-    length = "60"
-    width = "30"
-    x = 2 
-    y = 4
-    label = "human"
-    return length, width, x, y, label
+def get_raw_selection_properties(image_id, selection):
+    height = selection['height']
+    width = selection['width']
+    x = float(selection['x']) 
+    y = float(selection['y'])
+    label = selection['label']
+    print(height, width, x, y, label)
+    return height, width, x, y, label
 
-
+def get_label_counter(label):
+    if (label != ""):
+        return
 
 @selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
+
 def save_image(image_id):
-    #req = request.get_json()
-    #print(req)
-    #image_id = req[0]
-    #req = request.get_json()
-    length, width, x, y, label = get_raw_selection_properties(image_id)
+    req = request.get_json()
+    print("size of selections:", len(req['selections']))
+    for selection in req['selections']:
+        print(selection)
+        height, width, x, y, label = get_raw_selection_properties(image_id, selection)
+        print(height, width, x, y, label)
+        #height, width, x, y, label = get_raw_selection_properties(image_id, selection)
+        #print(height, width, x, y, label)
 
-    try:
-        cur = db.conn.cursor()
-        cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, length, width, x, y, label))
-        db.conn.commit()
-        cur.close()
-        
-        update_image_status(const.LABELED, image_id)
+        try:
+            print("SYUHU")
+            cur = db.conn.cursor()
+            cur.execute("INSERT INTO selections (id_image, length, width, x, y, label) VALUES (?, ?, ?, ?, ?, ?);", (image_id, height, width, x, y, label))
+            db.conn.commit()
+            cur.close()
+            print("SYUHU2")
+            
+        except Error as e:
+            return jsonify({"error": "can't fetch image"})
+            
+    update_image_status(const.LABELED, image_id)
 
-        image_id, filename, width, height = get_working_image()
-        if (image_id != const.ERROR and filename != const.ERROR and width != const.ERROR and height != const.ERROR):
-            update_image_status(const.EDITING, image_id)  
-            return jsonify({
-                "image_id": image_id,
-                "filename": filename,
-                "width": width,
-                "height": height
-            }), 200
-        else:
-            return jsonify({"error": "error occured. can't get image from database"}) 
-    except Error as e:
-        return jsonify({"error": "can't fetch image"})
+    image_id, filename, width, height = get_working_image()
+    if (image_id != const.ERROR and filename != const.ERROR and width != const.ERROR and height != const.ERROR):
+        update_image_status(const.EDITING, image_id)  
+        return jsonify({
+            "image_id": image_id,
+            "filename": filename,
+            "width": width,
+            "height": height
+        }), 200
+    else:
+        return jsonify({"error": "error occured. can't get image from database"}) 
+    return jsonify({"error": "null"})
+    # try:
+    # except Error as e:
+    #     return jsonify({"error": "can't fetch image"})
 
 
 
