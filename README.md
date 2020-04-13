@@ -13,16 +13,28 @@ Just do this once in installation only.
 git clone https://gitlab.informationka.org/if3250-2020-label-2/label-2-backend.git
 ````
 
-Create a virtual environment and install dependencies with this ocommand
+#### Create a Virtual Environment
 ```
-make install
+virtualenv label 
+source label/bin/activate
+```
+
+#### Install Dependencies
+```
+pip install -r requirements.txt
 ```
 
 ## Run on local server
+Ensure that your label virtual environment is activated, if not activate with this command
+```
+source label/bin/activate
+```
+
 To start development server, run this command
 ```
 make
 ```
+
 Don't forget to deactivate the virtual environment, before you are working on another python project
 ```
 deactivate
