@@ -1,3 +1,16 @@
 **/__pycache__
 *.pyc
 temp/
+
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.Python
+label/[Bb]in
+label/[Ii]nclude
+label/[Ll]ib
+label/[Ll]ib64
+label/[Ll]ocal
+label/[Ss]cripts
+label/pyvenv.cfg
+.venv
+pip-selfcheck.json
