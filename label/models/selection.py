@@ -20,6 +20,7 @@ STATUS = 1
 FILENAME = 2
 WIDTH = 4
 HEIGHT = 5
+URI = 6
 LABEL_ID = 0
 LABEL_NAME = 1
 LABEL_COUNT = 2
@@ -27,12 +28,12 @@ LABEL_COUNT = 2
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
     try:
-        image_id, filename, width, height = get_working_image()
-        if (image_id != const.ERROR and filename != const.ERROR):
+        image_id, uri, width, height = get_working_image()
+        if (image_id != const.ERROR and uri != const.ERROR):
             update_image_status(const.EDITING, image_id)  
             return jsonify({
                 "image_id": image_id,
-                "filename": filename,
+                "uri": uri,
                 "width": width,
                 "height": height
             }), 200
@@ -51,11 +52,11 @@ def get_working_image():
         cur.close()
         if (row != None):
             image_id = row[ID_IMAGE]
-            filename = row[FILENAME]
+            uri = row[URI]
             if row[WIDTH] != None and row[HEIGHT] != None:
                 width = row[WIDTH]
                 height = row[HEIGHT]
-                return (image_id, filename, width, height)
+                return (image_id, uri, width, height)
             else:
                 return(const.ERROR, const.ERROR, const.ERROR, const.ERROR)
         else:
@@ -161,12 +162,12 @@ def save_image(image_id):
             
     update_image_status(const.LABELED, image_id)
 
-    image_id, filename, width, height = get_working_image()
-    if (image_id != const.ERROR and filename != const.ERROR and width != const.ERROR and height != const.ERROR):
+    image_id, uri, width, height = get_working_image()
+    if (image_id != const.ERROR and uri != const.ERROR and width != const.ERROR and height != const.ERROR):
         update_image_status(const.EDITING, image_id)  
         return jsonify({
             "image_id": image_id,
-            "filename": filename,
+            "uri": uri,
             "width": width,
             "height": height
         }), 200
