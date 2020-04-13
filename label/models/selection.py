@@ -149,14 +149,13 @@ def save_image(image_id):
                         db.conn.commit()
                         cur.close()
                         print("YASS2")
-                        break
-            if (not isSame): 
-                print("lalala", label)
-                cur = db.conn.cursor()
-                cur.execute("INSERT INTO label (name, counter) VALUES (?, ?);", (label, "0"))
-                db.conn.commit()
-                cur.close()
-                print("lalala2")
+                if (not isSame): 
+                    print("lalala", label)
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO label (name, counter) VALUES (?, ?);", (label, "0"))
+                    db.conn.commit()
+                    cur.close()
+                    print("lalala2")
         except Error as e:
             return jsonify({"error": "can't connect to database"})
             
