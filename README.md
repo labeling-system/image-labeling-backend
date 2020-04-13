@@ -2,17 +2,31 @@
 
 ## Installation
 Make sure you have following software installed in your system
-* python 3.7.3
-* flask 1.1.1
+* python 3.6.9
+* pip 9.0.1
+
+Just do this once in installation only.
 
 ### Clone repository and dependency
 ````
-git clone https://gitlab.informatika.org/if3250-2020-label-2/label-2-backend.git
+git clone https://gitlab.informationka.org/if3250-2020-label-2/label-2-backend.git
 ````
-### Run on local server
+
+Create a virtual environment and install dependencies with this ocommand
+```
+make install
+```
+
+## Run on local server
+To start development server, run this command
 ```
 make
 ```
+Don't forget to deactivate the virtual environment, before you are working on another python project
+```
+deactivate
+```
+
 ### Access
 * host: `127.0.0.1`
 * port: `5000`
