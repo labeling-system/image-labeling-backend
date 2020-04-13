@@ -4,6 +4,7 @@
 Make sure you have following software installed in your system
 * python 3.6.9
 * pip 9.0.1
+* virtualenv 20.0.17
 
 Just do this once in installation only.
 
