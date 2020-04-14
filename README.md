@@ -191,3 +191,101 @@ Get at most top ten most used label from database
     ]
 }
 ```
+
+#### GET /downloadxml
+Get zipped file of all generated xml file for all labeled image 
+
+**Response**
+The response is zipped file contains all xml file.
+XML file :
+```
+<?xml version="1.0" ?>
+<annotation>
+   <folder>public/images</folder>
+   <filename>data.jpeg</filename>
+   <size>
+      <width>720.0</width>
+      <height>1280.0</height>
+   </size>
+   <object>
+      <name>human</name>
+      <bndbox>
+         <xmin>2</xmin>
+         <ymin>3</ymin>
+         <xmax>50.0</xmax>
+         <ymax>99.0</ymax>
+      </bndbox>
+   </object>
+</annotation>
+```
+
+#### GET /downloadjson
+Get zipped file of all generated json file for all labeled image 
+
+**Response**
+The response is zipped file contains all json file.
+XML file :
+```
+{
+    "info": {
+        "year": 2020,
+        "version": "1.0",
+        "description": "Global image dataset",
+        "contributor": "ppl-label-02-bounding_box",
+        "url": "tbd",
+        "date_created": "2020-04-14"
+    },
+    "categories": [
+        {
+            "id": 1,
+            "name": "human"
+        },
+        {
+            "id": 2,
+            "name": "cat"
+        },
+        {
+            "id": 3,
+            "name": "dog"
+        }
+    ],
+    "image": {
+        "id": 358,
+        "width": 720,
+        "height": 1280,
+        "filename": "data.jpeg"
+    },
+    "annotations": [
+        {
+            "segmentation": [
+                [
+                    2,
+                    3
+                ],
+                [
+                    2,
+                    99.0
+                ],
+                [
+                    50.0,
+                    99.0
+                ],
+                [
+                    50.0,
+                    3
+                ]
+            ],
+            "area": 60.0,
+            "image_id": 358,
+            "bbox": [
+                2,
+                3,
+                48.0,
+                96.0
+            ],
+            "category_id": 1,
+            "id": 1
+        }
+    ]
+}
+```
