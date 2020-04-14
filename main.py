@@ -18,6 +18,7 @@ INTERVAL = 1
 def update_inactive_editing():
     print("update inactive")
     try:
+        cur = db.conn.cursor()
         # Get all id image of expired image
         cur.execute("SELECT id_image FROM images WHERE status=:old_status AND last_update <= :time", {
             "old_status": const.EDITING, 

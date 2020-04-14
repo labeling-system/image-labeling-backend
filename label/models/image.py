@@ -61,6 +61,28 @@ def delete_all_image():
         "count": count
     }), 200
 
+
+@image_bp.route('/image/update/<id>', methods=['POST'])
+def update_inactive_editing_by_id(id):
+    print("wakgeng msk")
+    try:
+        cur = db.conn.cursor()
+
+        cur.execute("UPDATE images SET status= CASE WHEN (SELECT COUNT(*) FROM selections WHERE id_image=:id_image) > 0 THEN :status_labaled ELSE :status_unlabaled END WHERE id_image=:id_image", {
+            "status_labaled": const.LABELED, 
+            "status_unlabaled": const.UNLABELED, 
+            "id_image": id
+        })
+        
+        db.conn.commit()
+        cur.close()
+
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't update status image by id"}), 500
+
+    return Response(status=200)
+
 # Ping image id
 @image_bp.route('/image/ping/<id>', methods=['POST'])
 def ping_image(id):
@@ -122,6 +144,7 @@ def post_image():
         return jsonify({"error": "can't post image"}), 500
 
     return Response(status=200)
+    
 
 # For debugging, delete this when unused
 @image_bp.route('/image/update', methods=['POST'])
@@ -153,3 +176,4 @@ def update_inactive_editing():
         return jsonify({"error": "can't update status image"}), 500
 
     return Response(status=200)
+

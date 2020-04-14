@@ -10,6 +10,7 @@ import http.client
 import xmltodict
 import json
 from datetime import date
+import time
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
@@ -233,6 +234,9 @@ def save_image(image_id):
 
 def update_image_status(status, id_image):
     try:
+        if (status == const.EDITING):
+            ping_image(id_image)
+        
         cur = db.conn.cursor()
         cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, id_image))
         db.conn.commit()
@@ -447,3 +451,16 @@ def downloadjson():
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
+
+# Ping image id
+def ping_image(id):
+    print("ping from const edit")
+    try:
+        cur = db.conn.cursor()
+        cur.execute("UPDATE images SET last_update=:time WHERE id_image=:id", {"time": time.time(), "id": id})
+        db.conn.commit()
+        cur.close()
+
+    except Error as e:
+        print(e)
+        return e
