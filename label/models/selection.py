@@ -65,6 +65,47 @@ def get_working_image():
     except Error as e:
         print(e)
         return jsonify({"error": "can't get image from database"})
+
+@selection_bp.route('/selection/img/<id>', methods=['GET'])
+def specific_image(id):
+    try:
+        image_id, uri, width, height = get_specific_image(id)
+        if (image_id != const.ERROR and uri != const.ERROR):
+            update_image_status(const.EDITING, image_id)  
+            return jsonify({
+                "image_id": image_id,
+                "uri": uri,
+                "width": width,
+                "height": height
+            }), 200
+        else:
+            return jsonify({"error": "error occured. can't get image from database"}) 
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't get image from database"})
+
+
+def get_specific_image(image_id):
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM images WHERE id_image=?", [image_id])
+        row = cur.fetchone()
+        cur.close()
+        if (row != None):
+            image_id = row[ID_IMAGE]
+            uri = row[URI]
+            if row[WIDTH] != None and row[HEIGHT] != None:
+                width = row[WIDTH]
+                height = row[HEIGHT]
+                return (image_id, uri, width, height)
+            else:
+                return(const.ERROR, const.ERROR, const.ERROR, const.ERROR)
+        else:
+            return(const.ERROR, const.ERROR, const.ERROR, const.ERROR)
+
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't get image from database"})
  
 
 @selection_bp.route('/selection/<image_id>', methods=['GET'])
@@ -108,6 +149,16 @@ def get_label_counter(label):
 @selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
 
 def save_image(image_id):
+    try:
+        print("DELETE")
+        cur = db.conn.cursor()
+        cur.execute("DELETE FROM selections WHERE id_image=?;", (image_id))
+        db.conn.commit()
+        cur.close()
+        print("DELETE2")
+    except Error as e:
+        print("no existing selections for image id")
+
     req = request.get_json()
     print("size of selections:", len(req['selections']))
     for selection in req['selections']:
@@ -150,14 +201,13 @@ def save_image(image_id):
                         db.conn.commit()
                         cur.close()
                         print("YASS2")
-                        break
-            if (not isSame): 
-                print("lalala", label)
-                cur = db.conn.cursor()
-                cur.execute("INSERT INTO label (name, counter) VALUES (?, ?);", (label, "0"))
-                db.conn.commit()
-                cur.close()
-                print("lalala2")
+                if (not isSame): 
+                    print("lalala", label)
+                    cur = db.conn.cursor()
+                    cur.execute("INSERT INTO label (name, counter) VALUES (?, ?);", (label, "0"))
+                    db.conn.commit()
+                    cur.close()
+                    print("lalala2")
         except Error as e:
             return jsonify({"error": "can't connect to database"})
             
