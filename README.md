@@ -196,8 +196,8 @@ Get at most top ten most used label from database
 Get zipped file of all generated xml file for all labeled image 
 
 **Response**
-The response is zipped file contains all xml file.
-XML file :
+<br />ipped file contains all xml file.
+<br />(XML PASCAL VOC format)
 ```
 <?xml version="1.0" ?>
 <annotation>
@@ -223,8 +223,8 @@ XML file :
 Get zipped file of all generated json file for all labeled image 
 
 **Response**
-The response is zipped file contains all json file.
-XML file :
+<br />Zipped file contains all json file.
+<br />(JSON COCO format)
 ```
 {
     "info": {
