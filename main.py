@@ -8,13 +8,30 @@ import atexit
 import config
 import time
 
+
+ID = 0
+
+# in minutes
+INTERVAL = 1
+
 # must check new status based on selection
 def update_inactive_editing():
-    print("update")
+    print("update inactive")
     try:
-        cur = db.conn.cursor()
-        # check last update
-        cur.execute("UPDATE images SET status=:new_status WHERE status=:old_status", {"new_status": const.UNLABELED, "old_status": const.EDITING})
+        # Get all id image of expired image
+        cur.execute("SELECT id_image FROM images WHERE status=:old_status AND last_update <= :time", {
+            "old_status": const.EDITING, 
+            "time": time.time() - INTERVAL * 60
+        })
+        rows = cur.fetchall()
+
+        for row in rows:
+            cur.execute("UPDATE images SET status= CASE WHEN (SELECT COUNT(*) FROM selections WHERE id_image=:id_image) > 0 THEN :status_labaled ELSE :status_unlabaled END WHERE id_image=:id_image", {
+                "status_labaled": const.LABELED, 
+                "status_unlabaled": const.UNLABELED, 
+                "id_image": row[ID]
+            })
+        
         db.conn.commit()
         cur.close()
 
@@ -27,9 +44,9 @@ if __name__ == '__main__':
     db.create_connection(config.DATABASE_NAME)
 
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=update_inactive_editing, trigger="interval", seconds=60)
+    scheduler.add_job(func=update_inactive_editing, trigger="interval", seconds=INTERVAL*60)
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     
-    app.run(debug = True)
+    app.run(debug = True, use_reloader=False)
     db.close_connection()

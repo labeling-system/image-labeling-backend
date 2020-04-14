@@ -20,6 +20,9 @@ REQ_URI = 3
 
 COUNT_PAGE = 25
 
+# in minutes
+INTERVAL = 1
+
 # Fetch all image
 @image_bp.route('/image/all/<page>', methods=['GET'])
 def get_all_image(page):
@@ -51,7 +54,8 @@ def delete_all_image():
         cur.close()
 
     except Error as e:
-        return jsonify({"error": "can't fetch image"}), 500
+        print(e)
+        return jsonify({"error": "can't delete image"}), 500
     
     return jsonify({
         "count": count
@@ -124,12 +128,28 @@ def post_image():
 def update_inactive_editing():
     try:
         cur = db.conn.cursor()
-        cur.execute("UPDATE images SET status=:new_status WHERE status=:old_status", {"new_status": const.UNLABELED, "old_status": const.EDITING})
+        timed = time.time() - INTERVAL * 60
+        print(timed)
+
+        # Get all id image of expired image
+        cur.execute("SELECT id_image FROM images WHERE status=:old_status AND last_update <= :time", {
+            "old_status": const.EDITING, 
+            "time": time.time() - INTERVAL * 60
+        })
+        rows = cur.fetchall()
+
+        for row in rows:
+            cur.execute("UPDATE images SET status= CASE WHEN (SELECT COUNT(*) FROM selections WHERE id_image=:id_image) > 0 THEN :status_labaled ELSE :status_unlabaled END WHERE id_image=:id_image", {
+                "status_labaled": const.LABELED, 
+                "status_unlabaled": const.UNLABELED, 
+                "id_image": row[ID]
+            })
+        
         db.conn.commit()
         cur.close()
 
     except Error as e:
         print(e)
-        return jsonify({"error": "can't post image"}), 500
+        return jsonify({"error": "can't update status image"}), 500
 
     return Response(status=200)
