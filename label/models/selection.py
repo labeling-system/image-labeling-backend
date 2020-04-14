@@ -134,10 +134,10 @@ def get_selection_properties(image_id):
 
 #akan diimplementasikan dan digabungkan dengan kode lukas
 def get_raw_selection_properties(image_id, selection):
-    height = selection['height']
-    width = selection['width']
-    x = float(selection['x']) 
-    y = float(selection['y'])
+    height = int(selection['height'])
+    width = int(selection['width'])
+    x = int(selection['x']) 
+    y = int(selection['y'])
     label = selection['label']
     print(height, width, x, y, label)
     return height, width, x, y, label
@@ -152,11 +152,12 @@ def save_image(image_id):
     try:
         print("DELETE")
         cur = db.conn.cursor()
-        cur.execute("DELETE FROM selections WHERE id_image=?;", (image_id))
+        cur.execute("DELETE FROM selections WHERE id_image=:image_id;", {"image_id": image_id})
         db.conn.commit()
         cur.close()
         print("DELETE2")
     except Error as e:
+        print(e)
         print("no existing selections for image id")
 
     req = request.get_json()
