@@ -10,6 +10,7 @@ import http.client
 import xmltodict
 import json
 from datetime import date
+import time
 
 selection_bp = Blueprint('selection_bp', __name__,
                     template_folder='templates',
@@ -24,6 +25,10 @@ URI = 6
 LABEL_ID = 0
 LABEL_NAME = 1
 LABEL_COUNT = 2
+
+# const for generating xml and json file
+WIDTH_SIZE = 1000
+HEIGHT_SIZE = 800
 
 @selection_bp.route('/selection', methods=['GET', 'POST'])
 def working_image():
@@ -234,6 +239,9 @@ def save_image(image_id):
 
 def update_image_status(status, id_image):
     try:
+        if (status == const.EDITING):
+            ping_image(id_image)
+        
         cur = db.conn.cursor()
         cur.execute("UPDATE images SET status=? WHERE id_image=?;", (status, id_image))
         db.conn.commit()
@@ -254,6 +262,19 @@ def get_all_labeled():
         print(e)
     
     return rows
+    
+def convert_selection_dimension(actual_width, actual_height, selection_width, selection_height):
+    if actual_width > actual_height :
+        scaled_width = WIDTH_SIZE
+        scaled_height = actual_height / actual_width * scaled_width
+    else :
+        scaled_height = HEIGHT_SIZE
+        scaled_width = actual_width / actual_height * scaled_height
+
+    selection_width *= (actual_width / scaled_width)
+    selection_height *= (actual_height / scaled_height)
+
+    return selection_width, selection_width
 
 # function to get zip file of all json/xml generated file
 def zipping(directory):
@@ -290,22 +311,24 @@ def get_objects_xml(filename, data):
     node_object = ET.Element('object')
     for d in data:
         if (d[2].split('.')[0] == filename):
+            width, height = convert_selection_dimension(d[4], d[5], d[9], d[8])
+            xmin, ymin = convert_selection_dimension(d[4], d[5], d[10], d[11])
             node_name = ET.Element('name')
-            node_name.text = d[11]
+            node_name.text = d[12]
             node_object.append(node_name)
 
             node_bndbox = ET.Element('bndbox')
             node_xmin = ET.Element('xmin')
-            node_xmin.text = str(d[9])
+            node_xmin.text = str(xmin)
             node_bndbox.append(node_xmin)
             node_ymin = ET.Element('ymin')
-            node_ymin.text = str(d[10])
+            node_ymin.text = str(ymin)
             node_bndbox.append(node_ymin)
             node_xmax = ET.Element('xmax')
-            node_xmax.text = str(float(d[9]) + float(d[7]))
+            node_xmax.text = str(xmin + width)
             node_bndbox.append(node_xmax)
             node_ymax = ET.Element('ymax')
-            node_ymax.text = str(float(d[10]) + float(d[8]))
+            node_ymax.text = str(ymin + height)
             node_bndbox.append(node_ymax)
             node_object.append(node_bndbox)
     
@@ -339,7 +362,6 @@ def generate_all_xml():
 @selection_bp.route("/downloadxml", methods=['GET'])
 def downloadxml():
     try:
-        print("downloadxml")
         generate_all_xml()
         zipping('./temp/xml')
         response = send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
@@ -399,13 +421,15 @@ def get_annotations(filename, data):
     selections = []
     for d in data:
         if (d[2].split('.')[0] == filename):
+            width, height = convert_selection_dimension(d[4], d[5], d[9], d[8])
+            xmin, ymin = convert_selection_dimension(d[4], d[5], d[10], d[11])
             tmp = {
-                "segmentation": [d[9], d[10], d[9] + float(d[7]), d[10] + float(d[8])],
+                "segmentation": [xmin, ymin, xmin + width, ymin + height],
                 "area": float(d[7]) * float(d[8]),
                 "image_id": d[0],
-                "bbox": [d[9], d[10], float(d[7]), float(d[8])],
-                "category_id": d[12],
-                "id": d[6]
+                "bbox": [xmin, ymin, width, height],
+                "category_id": d[13],
+                "id": d[7]
             }
             selections.append(tmp)
     return selections
@@ -438,7 +462,6 @@ def generate_all_json():
 @selection_bp.route("/downloadjson", methods=['GET'])
 def downloadjson():
     try:
-        print("downloadjson")
         generate_all_json()
         zipping('./temp/json')
         response = send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
@@ -448,3 +471,16 @@ def downloadjson():
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
+
+# Ping image id
+def ping_image(id):
+    print("ping from const edit")
+    try:
+        cur = db.conn.cursor()
+        cur.execute("UPDATE images SET last_update=:time WHERE id_image=:id", {"time": time.time(), "id": id})
+        db.conn.commit()
+        cur.close()
+
+    except Error as e:
+        print(e)
+        return e
