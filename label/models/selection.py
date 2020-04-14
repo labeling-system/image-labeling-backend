@@ -157,7 +157,7 @@ def save_image(image_id):
         cur.close()
         print("DELETE2")
     except Error as e:
-        continue
+        print("no existing selections for image id")
 
     req = request.get_json()
     print("size of selections:", len(req['selections']))
