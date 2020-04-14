@@ -49,5 +49,5 @@ if __name__ == '__main__':
     scheduler.start()
     atexit.register(lambda: scheduler.shutdown())
     
-    app.run(debug = True, use_reloader=False)
+    app.run(debug = True, use_reloader=False, host= '0.0.0.0')
     db.close_connection()
