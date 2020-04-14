@@ -108,7 +108,19 @@ Fetch selections, from given image.
 
 
 #### GET/POST /selection/next/{image_id}
-Update labelled image to database and fetch another image with non editing status
+Update a labelled image to database and fetch another image with non editing status
+
+Post image id and array of selections [x_coordinate of selection, y_coordinate of selection, selection's height, selection's width, labelname]
+**Request**
+```
+{
+    "image_id" : 371
+    "selections": [
+      [2.81, 3.66, 80, 80, "human"],
+      [3.1, 6.22, 130, 100, "dog"],
+    ]
+}
+```
 
 **Response**
 ```
@@ -156,5 +168,26 @@ Delete all image and return total images deleted.
 ```
 {
     "count": 54
+}
+```
+
+#### GET /label
+Get at most top ten most used label from database 
+
+**Response**
+```
+{
+    "labelList": [
+        "Human", 
+        "Dog", 
+        "Cat",
+        "Car", 
+        "Bike", 
+        "Tree",
+        "Sun", 
+        "House", 
+        "Tiger",
+        "Flower"
+    ]
 }
 ```
