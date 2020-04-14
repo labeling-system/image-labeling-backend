@@ -105,6 +105,20 @@ Fetch selections, from given image.
 }
 ```
 
+
+#### GET /selection/img/{image_id}
+Fetch an image given id.
+
+**Response**
+```
+{
+  "height": 1440,
+  "image_id": 371,
+  "uri": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..
+  "width": 2560
+}
+```
+
 #### POST /image
 Save image to database as unlabeled from given files. Files is array of 
 filename, width, and height in pixel.
