@@ -84,9 +84,6 @@ Fetch selections, from given image.
 **Response**
 ```
 {
-  "count": [
-    2
-  ],
   "selections": [
     [
       100.0,
@@ -102,21 +99,38 @@ Fetch selections, from given image.
       "200",
       "asrap lagi"
     ]
+  ],
+  "count": [
+    2
   ]
 }
 ```
 
 
-#### GET /selection/img/{image_id}
-Fetch an image given id.
+#### GET/POST /selection/next/{image_id}
+Update labelled image to database and fetch another image with non editing status
 
 **Response**
 ```
 {
-  "height": 1440,
+    "image_id": 371,
+    "uri": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..
+    "width": 2560,
+    "height": 1440
+}
+```
+
+
+#### GET /selection
+Fetch an random image with non editing status on first workspace render
+
+**Response**
+```
+{
   "image_id": 371,
   "uri": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..
-  "width": 2560
+  "width": 2560,
+  "height": 1440
 }
 ```
 
