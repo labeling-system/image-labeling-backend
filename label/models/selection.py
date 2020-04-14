@@ -149,6 +149,16 @@ def get_label_counter(label):
 @selection_bp.route('/selection/next/<image_id>', methods=['GET', 'POST'])
 
 def save_image(image_id):
+    try:
+        print("DELETE")
+        cur = db.conn.cursor()
+        cur.execute("DELETE FROM selections WHERE id_image=?;", (image_id))
+        db.conn.commit()
+        cur.close()
+        print("DELETE2")
+    except Error as e:
+        continue
+
     req = request.get_json()
     print("size of selections:", len(req['selections']))
     for selection in req['selections']:
