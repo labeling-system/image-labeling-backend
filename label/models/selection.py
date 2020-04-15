@@ -372,6 +372,10 @@ def downloadxml():
         response = send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
+
+        remove_file('./temp/xml/','.xml')
+        remove_file('./temp/','.zip')
+
         return response
     except Exception as e:
         print(e)
@@ -471,10 +475,23 @@ def downloadjson():
         response = send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
+
+        remove_file('./temp/json/','.json')
+        remove_file('./temp/','.zip')
+        
         return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
+
+def remove_file(directory, extention):
+    try:
+        filelist = [ f for f in os.listdir(directory) if f.endswith(extention) ]
+        for f in filelist:
+            os.remove(os.path.join(directory, f))
+    
+    except Error as e:
+        print(e)
 
 # Ping image id
 def ping_image(id):
