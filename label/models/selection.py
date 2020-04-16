@@ -143,7 +143,12 @@ def get_raw_selection_properties(image_id, selection):
     width = int(selection['width'])
     x = int(selection['x']) 
     y = int(selection['y'])
-    label = selection['label']
+    if (isinstance(selection['label'], list)):
+        label = selection['label'][0]
+        print("labelnya dari most used", label)
+    else:
+        label = selection['label']
+        print("labelnya ketik manual", label)
     print(height, width, x, y, label)
     return height, width, x, y, label
 
