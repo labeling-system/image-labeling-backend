@@ -108,7 +108,19 @@ Fetch selections, from given image.
 
 
 #### GET/POST /selection/next/{image_id}
-Update labelled image to database and fetch another image with non editing status
+Update a labelled image to database and fetch another image with non editing status
+
+Post image id and array of selections [x_coordinate of selection, y_coordinate of selection, selection's height, selection's width, labelname]
+**Request**
+```
+{
+    "image_id" : 371
+    "selections": [
+      [2.81, 3.66, 80, 80, "human"],
+      [3.1, 6.22, 130, 100, "dog"],
+    ]
+}
+```
 
 **Response**
 ```
@@ -156,5 +168,124 @@ Delete all image and return total images deleted.
 ```
 {
     "count": 54
+}
+```
+
+#### GET /label
+Get at most top ten most used label from database 
+
+**Response**
+```
+{
+    "labelList": [
+        "Human", 
+        "Dog", 
+        "Cat",
+        "Car", 
+        "Bike", 
+        "Tree",
+        "Sun", 
+        "House", 
+        "Tiger",
+        "Flower"
+    ]
+}
+```
+
+#### GET /downloadxml
+Get zipped file of all generated xml file for all labeled image 
+
+**Response**
+<br />ipped file contains all xml file.
+<br />(XML PASCAL VOC format)
+```
+<?xml version="1.0" ?>
+<annotation>
+   <folder>public/images</folder>
+   <filename>data.jpeg</filename>
+   <size>
+      <width>720.0</width>
+      <height>1280.0</height>
+   </size>
+   <object>
+      <name>human</name>
+      <bndbox>
+         <xmin>2</xmin>
+         <ymin>3</ymin>
+         <xmax>50.0</xmax>
+         <ymax>99.0</ymax>
+      </bndbox>
+   </object>
+</annotation>
+```
+
+#### GET /downloadjson
+Get zipped file of all generated json file for all labeled image 
+
+**Response**
+<br />Zipped file contains all json file.
+<br />(JSON COCO format)
+```
+{
+    "info": {
+        "year": 2020,
+        "version": "1.0",
+        "description": "Global image dataset",
+        "contributor": "ppl-label-02-bounding_box",
+        "url": "tbd",
+        "date_created": "2020-04-14"
+    },
+    "categories": [
+        {
+            "id": 1,
+            "name": "human"
+        },
+        {
+            "id": 2,
+            "name": "cat"
+        },
+        {
+            "id": 3,
+            "name": "dog"
+        }
+    ],
+    "image": {
+        "id": 358,
+        "width": 720,
+        "height": 1280,
+        "filename": "data.jpeg"
+    },
+    "annotations": [
+        {
+            "segmentation": [
+                [
+                    2,
+                    3
+                ],
+                [
+                    2,
+                    99.0
+                ],
+                [
+                    50.0,
+                    99.0
+                ],
+                [
+                    50.0,
+                    3
+                ]
+            ],
+            "area": 60.0,
+            "image_id": 358,
+            "bbox": [
+                2,
+                3,
+                48.0,
+                96.0
+            ],
+            "category_id": 1,
+            "id": 1
+        }
+    ]
 }
 ```

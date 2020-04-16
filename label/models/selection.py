@@ -279,18 +279,23 @@ def convert_selection_dimension(actual_width, actual_height, selection_width, se
     selection_width *= (actual_width / scaled_width)
     selection_height *= (actual_height / scaled_height)
 
-    return selection_width, selection_width
+    return selection_width, selection_height
 
 # function to get zip file of all json/xml generated file
 def zipping(directory):
-    with ZipFile(directory + '.zip', 'w') as zipObj:
+    try:
+        with ZipFile(directory + '.zip', 'w') as zipObj:
         # Iterate over all the files in directory
-        for folderName, subfolders, filenames in os.walk(directory):
-            for filename in filenames:
-                #create complete filepath of file in directory
-                filePath = os.path.join(folderName, filename)
-                # Add file to zip
-                zipObj.write(filePath)
+            for folderName, subfolders, filenames in os.walk(directory):
+                for filename in filenames:
+                    #create complete filepath of file in directory
+                    filePath = os.path.join(folderName, filename)
+                    # Add file to zip
+                    zipObj.write(filePath)
+    
+    except Error as e:
+        print(e)
+    
 
 # functions to generate all xml file for all labeled images
 def get_image_info_xml(data):
@@ -317,23 +322,22 @@ def get_objects_xml(filename, data):
     for d in data:
         if (d[2].split('.')[0] == filename):
             width, height = convert_selection_dimension(d[4], d[5], d[9], d[8])
-            xmin, ymin = convert_selection_dimension(d[4], d[5], d[10], d[11])
             node_name = ET.Element('name')
             node_name.text = d[12]
             node_object.append(node_name)
 
             node_bndbox = ET.Element('bndbox')
             node_xmin = ET.Element('xmin')
-            node_xmin.text = str(xmin)
+            node_xmin.text = str(d[10])
             node_bndbox.append(node_xmin)
             node_ymin = ET.Element('ymin')
-            node_ymin.text = str(ymin)
+            node_ymin.text = str(d[11])
             node_bndbox.append(node_ymin)
             node_xmax = ET.Element('xmax')
-            node_xmax.text = str(xmin + width)
+            node_xmax.text = str(d[10] + width)
             node_bndbox.append(node_xmax)
             node_ymax = ET.Element('ymax')
-            node_ymax.text = str(ymin + height)
+            node_ymax.text = str(d[11] + height)
             node_bndbox.append(node_ymax)
             node_object.append(node_bndbox)
     
@@ -352,6 +356,7 @@ def generate_new_xml(filename, data, all_data):
 
 def generate_all_xml():
     try:
+        print("generate xml")
         data = get_all_labeled()
         curr_filename = data[0][2].split('.')[0]
         for d in data:
@@ -360,7 +365,7 @@ def generate_all_xml():
                 curr_filename = filename
                 generate_new_xml(filename, d, data)
 
-    except Error as e:
+    except Exception as e:
         print(e)
         return jsonify({"error": "can't generate xml file"}), 500
 
@@ -372,6 +377,10 @@ def downloadxml():
         response = send_file('../temp/xml.zip', attachment_filename='label.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
+
+        remove_file('./temp/xml/','.xml')
+        remove_file('./temp/','.zip')
+
         return response
     except Exception as e:
         print(e)
@@ -427,12 +436,11 @@ def get_annotations(filename, data):
     for d in data:
         if (d[2].split('.')[0] == filename):
             width, height = convert_selection_dimension(d[4], d[5], d[9], d[8])
-            xmin, ymin = convert_selection_dimension(d[4], d[5], d[10], d[11])
             tmp = {
-                "segmentation": [xmin, ymin, xmin + width, ymin + height],
+                "segmentation": [(d[10], d[11]), (d[10], d[11] + height), (d[10] + width, d[11] + height), (d[10] + width, d[11])],
                 "area": float(d[7]) * float(d[8]),
                 "image_id": d[0],
-                "bbox": [xmin, ymin, width, height],
+                "bbox": [d[10], d[11], width, height],
                 "category_id": d[13],
                 "id": d[7]
             }
@@ -472,10 +480,23 @@ def downloadjson():
         response = send_file('../temp/json.zip', attachment_filename='label.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
+
+        remove_file('./temp/json/','.json')
+        remove_file('./temp/','.zip')
+        
         return response
     except Exception as e:
         print(e)
         return jsonify({"error": "can't send zip file"}), 500
+
+def remove_file(directory, extention):
+    try:
+        filelist = [ f for f in os.listdir(directory) if f.endswith(extention) ]
+        for f in filelist:
+            os.remove(os.path.join(directory, f))
+    
+    except Error as e:
+        print(e)
 
 # Ping image id
 def ping_image(id):
