@@ -1,1 +1,0 @@
-This directory will contain all generated xml file for all labeled image
