@@ -188,7 +188,7 @@ def save_image(image_id):
             print("SYUHU2")
             
         except Error as e:
-            return jsonify({"error": "can't fetch image"})
+            return jsonify({"error": "labels aren't inputted correctly"})
         
         try:
             print("labels")
@@ -220,7 +220,7 @@ def save_image(image_id):
                     cur.close()
                     print("lalala2")
         except Error as e:
-            return jsonify({"error": "can't connect to database"})
+            return jsonify({"error": "labels error"})
             
     update_image_status(const.LABELED, image_id)
 
@@ -234,7 +234,7 @@ def save_image(image_id):
             "height": height
         }), 200
     else:
-        return jsonify({"error": "error occured. can't get image from database"}) 
+        return jsonify({"error": "all images are done being labeled"}) 
     return jsonify({"error": "null"})
     # try:
     # except Error as e:
