@@ -1,1 +1,0 @@
-This directory will contain all generated json file for all labeled image

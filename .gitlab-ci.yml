@@ -1,0 +1,22 @@
+stages:
+  - lint
+  - test
+  - deploy
+
+# lint:
+#   stage: lint
+#   script:
+
+# test:
+#   stage: test
+#   script:
+
+deploy:
+  only:
+    - deploy
+    - master
+  stage: deploy
+  script:
+    - (docker stop label-2-be-app || true) && (docker rm label-2-be-app || true)
+    - docker build -t label-2-be-app .
+    - docker run --name label-2-be-app -p 5000:5000 -d label-2-be-app
