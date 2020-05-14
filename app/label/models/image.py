@@ -44,22 +44,23 @@ def get_all_image(page):
     }), 200
 
 # Delete all image
-@image_bp.route('/image/all', methods=['DELETE'])
-def delete_all_image():
-    try:
-        cur = db.conn.cursor()
-        cur.execute("DELETE FROM selections")
-        cur.execute("DELETE FROM images")
-        count = cur.rowcount
-        cur.close()
+# @image_bp.route('/image/all', methods=['DELETE'])
+# def delete_all_image():
+#     print("msk all")
+#     try:
+#         cur = db.conn.cursor()
+#         cur.execute("DELETE FROM selections")
+#         cur.execute("DELETE FROM images")
+#         count = cur.rowcount
+#         cur.close()
 
-    except Error as e:
-        print(e)
-        return jsonify({"error": "can't delete image"}), 500
+#     except Error as e:
+#         print(e)
+#         return jsonify({"error": "can't delete image"}), 500
     
-    return jsonify({
-        "count": count
-    }), 200
+#     return jsonify({
+#         "count": count
+#     }), 200
 
 
 @image_bp.route('/image/update/<id>', methods=['POST'])
@@ -120,6 +121,25 @@ def get_image(id):
         "filename": row[FILENAME],
         "status": row[STATUS],
         "last_update": row[LAST_UPDATE]
+    }), 200
+
+# Delete all image
+@image_bp.route('/image/<id>', methods=['DELETE'])
+def delete_image_by_id(id):
+    try:
+        print("msk sini")
+        cur = db.conn.cursor()
+        cur.execute("DELETE FROM selections WHERE id_image=:id", {"id": id})
+        cur.execute("DELETE FROM images WHERE id_image=:id", {"id": id})
+        count = cur.rowcount
+        cur.close()
+
+    except Error as e:
+        print(e)
+        return jsonify({"error": "can't delete image"}), 500
+    
+    return jsonify({
+        "count": count
     }), 200
 
 # Save image to database as unlabeled
