@@ -385,7 +385,7 @@ def downloadxml():
     try:
         generate_all_xml()
         zip_file('./temp/generated_file')
-        response = send_file('../temp/generated_file.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/generated_file.zip', attachment_filename='xml.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
 
@@ -495,7 +495,7 @@ def downloadjson():
     try:
         generate_all_json()
         zip_file('./temp/generated_file')
-        response = send_file('../temp/generated_file.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/generated_file.zip', attachment_filename='json.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
 
@@ -536,7 +536,7 @@ def downloadimg():
         rows = get_all_labeled()
         blob_to_img(rows)
         zip_file('./temp/generated_file')
-        response = send_file('../temp/generated_file.zip', attachment_filename='label.zip', as_attachment=True)
+        response = send_file('../temp/generated_file.zip', attachment_filename='img.zip', as_attachment=True)
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
 
