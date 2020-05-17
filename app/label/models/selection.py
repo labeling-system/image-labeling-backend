@@ -509,7 +509,7 @@ def downloadjson():
 
 def remove_file(directory, extention):
     try:
-        filelist = [ f for f in os.listdir(directory) if f.endswith(extention) ]
+        filelist = [ f for f in os.listdir(directory) if f.endswith(extention) or f.endswith(extention.upper())]
         for f in filelist:
             os.remove(os.path.join(directory, f))
     
@@ -530,10 +530,22 @@ def ping_image(id):
         return e
 
 # download all image
+def get_all_images():
+    try:
+        cur = db.conn.cursor()
+        cur.execute("SELECT * FROM images")
+        rows = cur.fetchall()
+        cur.close()
+
+    except Error as e:
+        print(e)
+    
+    return rows
+
 @selection_bp.route("/downloadimg", methods=['GET'])
 def downloadimg():
     try:
-        rows = get_all_labeled()
+        rows = get_all_images()
         blob_to_img(rows)
         zip_file('./temp/generated_file')
         response = send_file('../temp/generated_file.zip', attachment_filename='img.zip', as_attachment=True)
